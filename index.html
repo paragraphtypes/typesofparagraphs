@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paragraph Skills Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --ink: #1a1a2e;
+    --muted: #6b6b80;
+    --accent: #2d6a6a;
+    --accent-light: #e0f0f0;
+    --gold: #c6963a;
+    --gold-light: #fdf3de;
+    --correct: #2d7a4a;
+    --correct-bg: #e8f7ee;
+    --wrong: #b33030;
+    --wrong-bg: #fdecea;
+    --hint-bg: #fffbea;
+    --hint-border: #f0c040;
+    --hint-text: #7a5c00;
+    --border: #e4ddd4;
+    --shadow: 0 4px 24px rgba(26,26,46,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--ink);
+    padding: 0 16px 60px;
+  }
+
+  /* HEADER */
+  .header { text-align: center; padding: 48px 16px 32px; }
+  .header .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px,5vw,42px); color: var(--ink); line-height: 1.2; }
+  .header p { margin-top: 10px; color: var(--muted); font-size: 15px; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+  /* PROGRESS */
+  .progress-wrap { max-width: 680px; margin: 0 auto 32px; padding: 0 8px; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .progress-bar-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--gold)); border-radius: 99px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+
+  /* CARD */
+  .card { max-width: 680px; margin: 0 auto; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; animation: fadeUp 0.4s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+  .card-tag { display: flex; align-items: center; gap: 10px; padding: 18px 28px; border-bottom: 1px solid var(--border); background: #fafafa; }
+  .tag-pill { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; }
+  .tag-ts  { background: #dbeafe; color: #1e40af; }
+  .tag-ooo { background: #fce7f3; color: #9d174d; }
+  .tag-cs  { background: #d1fae5; color: #065f46; }
+  .tag-ps  { background: #ede9fe; color: #5b21b6; }
+  .tag-sw  { background: #fff3cd; color: #92400e; }
+  .tag-fo  { background: #fee2e2; color: #991b1b; }
+
+  .card-body { padding: 28px 28px 10px; }
+  .question-text { font-size: 16px; font-weight: 500; line-height: 1.65; color: var(--ink); margin-bottom: 22px; }
+  .para-box { background: var(--bg); border-left: 4px solid var(--gold); border-radius: 0 10px 10px 0; padding: 16px 20px; font-size: 14.5px; line-height: 1.8; color: #333; margin-bottom: 22px; font-style: italic; }
+
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    display: flex; align-items: flex-start; gap: 12px;
+    width: 100%; text-align: left;
+    padding: 14px 18px;
+    border: 2px solid var(--border); border-radius: 12px;
+    background: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: 14.5px; line-height: 1.55; color: var(--ink);
+    cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.1s;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-light); transform: translateX(3px); }
+  .option-btn:disabled { cursor: default; }
+  .option-btn.state-correct  { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); font-weight: 600; }
+  .option-btn.state-wrong    { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); }
+  .option-btn.state-hinted   { border-color: var(--hint-border); background: var(--hint-bg); }
+  .option-btn.state-reveal-correct { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); font-weight: 600; }
+
+  .opt-letter {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; flex-shrink: 0; margin-top: 1px;
+    border-radius: 50%; background: var(--border);
+    font-size: 12px; font-weight: 700;
+    transition: background 0.2s, color 0.2s;
+  }
+  .option-btn.state-correct .opt-letter,
+  .option-btn.state-reveal-correct .opt-letter { background: var(--correct); color: #fff; }
+  .option-btn.state-wrong .opt-letter    { background: var(--wrong); color: #fff; }
+  .option-btn.state-hinted .opt-letter   { background: var(--hint-border); color: #fff; }
+
+  /* ODD ONE OUT */
+  .sentences { display: flex; flex-direction: column; gap: 10px; }
+  .sentence-btn {
+    width: 100%; text-align: left;
+    padding: 13px 18px; border: 2px solid var(--border); border-radius: 12px;
+    background: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.65; color: var(--ink);
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  }
+  .sentence-btn:hover:not(:disabled) { border-color: #9d174d; background: #fce7f3; }
+  .sentence-btn:disabled { cursor: default; }
+  .sentence-btn.state-correct        { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); font-weight: 600; }
+  .sentence-btn.state-hinted         { border-color: var(--hint-border); background: var(--hint-bg); }
+  .sentence-btn.state-reveal-correct { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); font-weight: 600; }
+  .sentence-btn.state-reveal-wrong   { border-color: var(--border); opacity: 0.6; }
+
+  /* HINT BOX */
+  .hint-box {
+    display: none; margin-top: 14px;
+    padding: 12px 16px; border-radius: 10px;
+    background: var(--hint-bg); border: 1px solid var(--hint-border);
+    font-size: 13.5px; line-height: 1.6; color: var(--hint-text);
+  }
+  .hint-box.show { display: block; animation: fadeUp 0.25s ease both; }
+  .hint-box strong { font-weight: 700; }
+  .hint-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--hint-border); margin-bottom: 5px; }
+
+  /* SHOW ME WHY BUTTON */
+  .show-why-wrap { display: none; margin-top: 10px; }
+  .show-why-wrap.show { display: block; }
+  .show-why-btn {
+    background: none; border: 2px solid var(--ink); border-radius: 10px;
+    padding: 9px 18px;
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ink);
+    cursor: pointer; transition: background 0.2s, color 0.2s;
+  }
+  .show-why-btn:hover { background: var(--ink); color: #fff; }
+
+  /* FEEDBACK (explanation) */
+  .feedback { display: none; margin-top: 14px; padding: 14px 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; }
+  .feedback.show { display: block; animation: fadeUp 0.3s ease both; }
+  .feedback.fb-correct { background: var(--correct-bg); color: #065f46; border: 1px solid #a7f3d0; }
+  .feedback.fb-wrong   { background: #f0f4ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+
+  /* NEXT BUTTON */
+  .next-wrap { padding: 14px 28px 28px; display: none; }
+  .next-wrap.show { display: block; }
+  .next-btn {
+    width: 100%; padding: 14px;
+    background: var(--ink); color: #fff; border: none; border-radius: 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; letter-spacing: 0.3px; transition: background 0.2s, transform 0.1s;
+  }
+  .next-btn:hover { background: var(--accent); transform: translateY(-1px); }
+
+  /* ATTEMPTS BADGE */
+  .attempts-badge { font-size: 12px; color: var(--muted); margin-top: 8px; padding: 0 28px; display: none; }
+  .attempts-badge.show { display: block; }
+
+  /* RESULTS */
+  .results { display: none; max-width: 680px; margin: 0 auto; animation: fadeUp 0.4s ease both; }
+  .results.show { display: block; }
+  .results-card { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); padding: 40px 28px; text-align: center; }
+  .score-ring { width: 130px; height: 130px; margin: 0 auto 24px; position: relative; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .ring-bg   { fill: none; stroke: var(--border); stroke-width: 10; }
+  .score-ring .ring-fill { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .score-number { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Playfair Display', serif; font-size: 30px; color: var(--ink); }
+  .results-title { font-family: 'Playfair Display', serif; font-size: 26px; margin-bottom: 8px; }
+  .results-sub { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  .divider { width: 40px; height: 3px; background: var(--gold); border-radius: 99px; margin: 0 auto 20px; }
+
+  .review { text-align: left; margin-top: 24px; }
+  .review-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5; }
+  .review-item:last-child { border-bottom: none; }
+  .review-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .review-q { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .review-ans { color: var(--ink); margin-top: 2px; }
+  .review-tries { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  .restart-btn { margin-top: 28px; width: 100%; padding: 14px; background: var(--ink); color: #fff; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .restart-btn:hover { background: var(--accent); }
+
+  @media (max-width: 480px) {
+    .card-body { padding: 20px 18px 10px; }
+    .card-tag  { padding: 14px 18px; }
+    .next-wrap { padding: 12px 18px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">English Writing Skills</div>
+  <h1>Paragraph Mastery</h1>
+  <p>Units 5, 6 & 7 — Opinion, Cause-Effect, and Comparison paragraphs.</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-meta">
+    <span id="prog-label">Question 1 of 25</span>
+    <span id="score-label">Score: 0</span>
+  </div>
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="prog-fill" style="width:4%"></div>
+  </div>
+</div>
+
+<div id="quiz-area"></div>
+
+<div class="results" id="results-screen">
+  <div class="results-card">
+    <div class="score-ring">
+      <svg viewBox="0 0 130 130" width="130" height="130">
+        <circle class="ring-bg"   cx="65" cy="65" r="55"/>
+        <circle class="ring-fill" id="ring-fill" cx="65" cy="65" r="55" stroke-dasharray="345.4" stroke-dashoffset="345.4"/>
+      </svg>
+      <div class="score-number" id="score-display">0/25</div>
+    </div>
+    <div class="divider"></div>
+    <div class="results-title" id="results-title">Well done!</div>
+    <div class="results-sub"   id="results-sub">Here's a summary of your answers.</div>
+    <div class="review"        id="review-list"></div>
+    <button class="restart-btn" onclick="restart()">Try Again ↺</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// QUESTION DATA
+// ─────────────────────────────────────────────────────────────
+const questions = [
+
+// ── 1. TOPIC SENTENCE — Opinion ──────────────────────────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this opinion paragraph.",
+  body:"First, social media allows people to stay connected with friends and family anywhere in the world. A simple message or video call can bridge the distance between loved ones in different countries, making it far easier to maintain close relationships. In addition, it is an excellent source of news and information — platforms give users instant access to breaking stories, expert opinions, and educational content that would otherwise be hard to find. Furthermore, social media gives ordinary people a powerful platform to share their ideas and creativity with a large audience. Many successful artists, writers, and small business owners have built careers simply by sharing their work online. In conclusion, social media has become an important and largely positive part of everyday life for millions of people around the world.",
+  options:[
+    {text:"Many people use social media every day.", correct:false},
+    {text:"I believe that social media has many positive effects on people's lives.", correct:true},
+    {text:"Social media was invented in the early 2000s.", correct:false},
+    {text:"Some people spend too much time on their phones.", correct:false},
+  ],
+  hints:[
+    "This is a general fact, not an opinion. A topic sentence for an opinion paragraph must clearly state the writer's view — look for opinion language like <em>I believe</em> or <em>In my opinion</em>.",
+    null,
+    "This is a historical fact. It also doesn't connect to the supporting sentences, which are all about benefits. Your topic sentence must match what the paragraph discusses.",
+    "This introduces a negative idea, but the paragraph only talks about positive effects. The topic sentence must match the direction of the whole paragraph.",
+  ],
+  explanation:"Option B is correct. <em>'I believe that'</em> is a clear opinion signal, and the controlling idea (positive effects of social media) is exactly what all three supporting sentences develop."
+},
+
+// ── 2. TOPIC SENTENCE — Cause ────────────────────────────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this cause paragraph.",
+  body:"One reason is the increasing cost of living. As rent and food prices rise, many people can no longer afford basic expenses, even when they are employed. Another cause is the lack of well-paying jobs — in many regions, available work is low-skilled and poorly paid, making it impossible to save money or plan for the future. Additionally, unexpected medical costs can quickly push a family into serious financial hardship; a single hospital visit without insurance can wipe out months of savings. Finally, a lack of access to quality education means that many people are unable to develop the skills needed for better-paying careers. In conclusion, poverty is a complex problem driven by economic, medical, and educational factors that often reinforce each other.",
+  options:[
+    {text:"Poverty is a serious problem in many countries.", correct:false},
+    {text:"The government should do more to help people living in poverty.", correct:false},
+    {text:"There are several reasons why many people fall into poverty.", correct:true},
+    {text:"Poverty has many effects on families and communities.", correct:false},
+  ],
+  hints:[
+    "This names the topic but doesn't signal that the paragraph will explain causes. A cause topic sentence needs words like <em>reasons</em>, <em>causes</em>, or <em>factors</em>.",
+    "This is an opinion sentence — it says what should be done, not why something happens. Cause paragraphs explain reasons, not recommendations.",
+    null,
+    "Watch out — this signals an <em>effects</em> paragraph. But the supporting sentences explain causes (cost of living, jobs, medical costs). Your topic sentence must match what follows.",
+  ],
+  explanation:"Option C is correct. It names the topic (poverty) and uses <em>'several reasons why'</em> to signal a causes paragraph. Every supporting sentence then introduces one cause, using signal words like <em>one reason</em>, <em>another cause</em>."
+},
+
+// ── 3. TOPIC SENTENCE — Effect ───────────────────────────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this effect paragraph.",
+  body:"First of all, people who exercise regularly tend to have stronger hearts and lower blood pressure, which significantly reduces the risk of cardiovascular disease later in life. In addition, exercise releases chemicals in the brain called endorphins, which improve mood, reduce anxiety, and help people manage stress more effectively. Furthermore, active people often report sleeping better and having more energy throughout the day, allowing them to be more focused and productive at work or school. Finally, regular physical activity helps maintain a healthy weight and strengthens muscles and bones, reducing the risk of injury as people age. To sum up, the physical and mental benefits of regular exercise make it one of the most valuable habits a person can develop.",
+  options:[
+    {text:"Regular exercise has several important benefits for both the body and mind.", correct:true},
+    {text:"There are many reasons why people should exercise more.", correct:false},
+    {text:"Exercise is one of the most popular activities in the world.", correct:false},
+    {text:"Many people do not exercise enough in modern life.", correct:false},
+  ],
+  hints:[
+    null,
+    "This sounds like a cause topic sentence — <em>'reasons why people should'</em> sets up causes or opinions, not effects. The supporting sentences describe what exercise does to the body — these are outcomes.",
+    "This is a vague general fact with no controlling idea. It doesn't tell the reader what specific direction the paragraph will take.",
+    "This introduces a problem, but the paragraph doesn't discuss the problem — it discusses the positive results of exercising. Topic sentences must match the paragraph's content.",
+  ],
+  explanation:"Option A is correct. <em>'Has several important benefits'</em> signals an effects paragraph — the paragraph will explain what exercise does. Each supporting sentence then gives one specific effect: heart health, mood improvement, better sleep."
+},
+
+// ── 4. TOPIC SENTENCE — Similarity ───────────────────────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this similarity paragraph.",
+  body:"Both cities are home to world-famous museums and art galleries that attract millions of visitors from around the globe every year. Similarly, they both have rich histories visible in their architecture — from ancient monuments and historic squares to grand palaces and ornate fountains that have stood for centuries. In the same way, both are known for their vibrant café cultures, where locals and tourists spend hours over coffee, good food, and lively conversation. Furthermore, both Paris and Rome have well-preserved historic city centres that make exploring on foot a genuine pleasure for visitors. In conclusion, whether you visit for the art, the history, or the atmosphere, Paris and Rome offer remarkably similar and equally rewarding experiences.",
+  options:[
+    {text:"Paris and Rome are two of the most visited cities in Europe.", correct:false},
+    {text:"Paris and Rome are different in many ways.", correct:false},
+    {text:"In my opinion, Paris is a more interesting city than Rome.", correct:false},
+    {text:"Paris and Rome share many similarities as popular European destinations.", correct:true},
+  ],
+  hints:[
+    "This is a fact about popularity — it doesn't signal that the paragraph will focus on similarities. A similarity topic sentence must show that two things are being compared as alike.",
+    "This points to differences, but the paragraph discusses only similarities. Be careful: <em>different</em> vs <em>similar</em> completely change the paragraph's direction.",
+    "This is a personal opinion, and it compares the two cities as unequal — but the paragraph treats them equally. Topic sentences must match the paragraph's purpose.",
+    null,
+  ],
+  explanation:"Option D is correct. It names both subjects (Paris and Rome) and uses <em>'share many similarities'</em> to clearly signal a similarities paragraph. All three supporting sentences then develop a specific shared quality."
+},
+
+// ── 5. TOPIC SENTENCE — Contrast ─────────────────────────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this contrast paragraph.",
+  body:"First, high school students follow a timetable set by their school, while university students choose their own courses and build their own weekly schedules. In addition, high school teachers closely monitor student progress and regularly contact parents, whereas university students are expected to manage their own learning and seek help independently. Furthermore, the social environment differs greatly — high school students spend years with the same group of peers, while university students meet a far more diverse range of people from different cities and backgrounds. Finally, high school is free in most countries, but university requires tuition fees and careful financial planning. In conclusion, high school and university differ significantly in structure, independence, social experience, and cost.",
+  options:[
+    {text:"High school and university are both important stages of education.", correct:false},
+    {text:"High school and university are different in several significant ways.", correct:true},
+    {text:"University is clearly better than high school for most students.", correct:false},
+    {text:"There are many reasons why students prefer university to high school.", correct:false},
+  ],
+  hints:[
+    "<em>'Both'</em> signals a similarity, not a contrast. The paragraph only discusses differences between high school and university — your topic sentence must match.",
+    null,
+    "This is an opinion that argues one is better. But the paragraph doesn't take sides — it objectively contrasts two educational experiences. Don't confuse opinion with contrast.",
+    "This reads like a cause topic sentence (<em>'reasons why'</em>). The paragraph doesn't explain preferences — it highlights differences. Match the topic sentence to what actually follows.",
+  ],
+  explanation:"Option B is correct. It introduces both subjects and uses <em>'different in several significant ways'</em> to signal a contrast paragraph. Each supporting sentence then highlights one difference, using <em>while</em>, <em>whereas</em>, and <em>but</em>."
+},
+
+// ── 6. TOPIC SENTENCE — Opinion (harder) ─────────────────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this opinion paragraph.",
+  body:"To begin with, remote work eliminates the stress of commuting, giving employees more time for family, exercise, and personal activities — which leads to a better overall work-life balance. Furthermore, people tend to work in a more comfortable and personalised environment at home, which can reduce distractions and boost creativity and concentration. In addition, companies can hire talented people from different cities or countries, increasing diversity and allowing organisations to find the best candidates regardless of location. Moreover, businesses can save money on office space and equipment, which can be reinvested into staff development or better technology. For all these reasons, it is clear that remote working offers significant and lasting advantages for both employees and the organisations they work for.",
+  options:[
+    {text:"Many companies now offer remote working options to their employees.", correct:false},
+    {text:"Working from home has both advantages and disadvantages.", correct:false},
+    {text:"In my opinion, working remotely is beneficial for both employees and companies.", correct:true},
+    {text:"Some people find it difficult to stay motivated when working from home.", correct:false},
+  ],
+  hints:[
+    "This is a factual observation about a trend. It doesn't take a position or tell the reader what the paragraph will argue. An opinion topic sentence must state the writer's view clearly.",
+    "This promises to discuss both sides, but the paragraph only presents benefits — no disadvantages are mentioned. Your topic sentence must match what actually follows.",
+    null,
+    "This introduces a negative point (difficulty staying motivated) that completely contradicts the paragraph's positive content. A topic sentence controls the whole paragraph — they must match.",
+  ],
+  explanation:"Option C is correct. <em>'In my opinion'</em> signals an opinion paragraph clearly, and <em>'beneficial for both employees and companies'</em> is the controlling idea. Each supporting sentence then explains a specific benefit for one or both groups."
+},
+
+// ── 7. ODD ONE OUT — Opinion ──────────────────────────────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this opinion paragraph about learning a second language.",
+  sentences:[
+    {text:"1. Learning a second language opens up more career opportunities in international companies.", correct:false, hint:"This directly supports the idea that learning a language is beneficial — it belongs in the paragraph."},
+    {text:"2. It also helps people understand different cultures and become more open-minded.", correct:false, hint:"This is a clear supporting sentence about a personal benefit of language learning. It fits the main idea well."},
+    {text:"3. Grammar rules are often considered the most difficult part of language learning.", correct:true, hint:"The other sentences all explain a specific <em>benefit</em> of learning a second language. Does this sentence describe a benefit, or does it talk about something else entirely?"},
+    {text:"4. In addition, being bilingual has been shown to improve memory and concentration.", correct:false, hint:"This gives a cognitive benefit of language learning. It supports the main idea."},
+    {text:"5. Overall, learning a new language enriches your personal and professional life.", correct:false, hint:"This is a concluding sentence that wraps up the benefits. It belongs in the paragraph."},
+  ],
+  explanation:"Sentence 3 is the odd one out. It mentions a difficulty (grammar rules) — but the paragraph's main idea is the <em>benefits</em> of learning a second language. Sentences 1, 2, 4, and 5 each explain a clear benefit: career opportunities, cultural understanding, cognitive improvement, and personal growth. Sentence 3 doesn't support any of these — it shifts to a completely different angle."
+},
+
+// ── 8. ODD ONE OUT — Cause ───────────────────────────────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this cause paragraph about stress in university students.",
+  sentences:[
+    {text:"1. One reason is the pressure of exams and deadlines, which can feel overwhelming.", correct:false, hint:"This clearly identifies a cause of student stress. It belongs in the paragraph."},
+    {text:"2. Another cause is financial difficulty, as many students struggle to pay for tuition and living costs.", correct:false, hint:"Financial difficulty is presented as a cause of stress. It fits the paragraph perfectly."},
+    {text:"3. Universities should provide more mental health support for their students.", correct:true, hint:"Think carefully: does this sentence explain a <em>cause</em> of stress, or does it suggest a solution to it?"},
+    {text:"4. In addition, many students feel lonely after moving away from home for the first time.", correct:false, hint:"Loneliness is introduced as another cause of stress. This supports the main idea."},
+  ],
+  explanation:"Sentence 3 is the odd one out. It gives an opinion/recommendation — what universities <em>should</em> do — not a cause of stress. A cause paragraph explains <em>why</em> something happens, not what should be done about it."
+},
+
+// ── 9. ODD ONE OUT — Effect ───────────────────────────────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this effect paragraph about spending too much time on screens.",
+  sentences:[
+    {text:"1. As a result, many people experience eye strain and headaches after long hours looking at a screen.", correct:false, hint:"This gives a physical effect of screen use, with the signal word <em>as a result</em>. It fits an effect paragraph."},
+    {text:"2. Consequently, disrupted sleep has become a common problem, especially among teenagers.", correct:false, hint:"Disrupted sleep is introduced as an effect. <em>Consequently</em> marks it clearly as an effect sentence."},
+    {text:"3. People use smartphones, tablets, laptops, and TVs for many hours every day.", correct:true, hint:"Ask yourself: does this sentence tell us what <em>happens because of</em> screen time, or does it just state a fact about screen habits?"},
+    {text:"4. Therefore, reduced physical activity can lead to weight gain and weaker muscles over time.", correct:false, hint:"This gives a physical health effect of excessive screen time, using the signal word <em>therefore</em>. It belongs here."},
+  ],
+  explanation:"Sentence 3 is the odd one out. It states a fact about screen habits but describes no effect — there is no 'as a result of this, that happens' structure. Sentences 1, 2, and 4 all use effect signal words (<em>as a result, consequently, therefore</em>) and describe clear consequences."
+},
+
+// ── 10. ODD ONE OUT — Similarity ──────────────────────────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this similarity paragraph about cats and dogs as pets.",
+  sentences:[
+    {text:"1. Both cats and dogs form strong emotional bonds with their owners over time.", correct:false, hint:"This shows a clear similarity between cats and dogs. It belongs in the paragraph."},
+    {text:"2. Likewise, both animals require regular veterinary check-ups to stay healthy.", correct:false, hint:"This introduces another similarity using <em>likewise</em>. It fits the paragraph."},
+    {text:"3. Dogs are generally more energetic and require more outdoor exercise than cats.", correct:true, hint:"This sentence is about cats and dogs — but does it show how they are <em>similar</em>, or how they are <em>different</em>?"},
+    {text:"4. In the same way, both pets can be trained to follow basic commands.", correct:false, hint:"This shows another similarity using <em>in the same way</em>. It supports the main idea."},
+  ],
+  explanation:"Sentence 3 is the odd one out. It describes a <em>difference</em> (dogs are more energetic than cats), not a similarity. In a similarities paragraph, every supporting sentence must show how the two things are alike. Introducing a difference breaks the paragraph's unity."
+},
+
+// ── 11. ODD ONE OUT — Contrast ────────────────────────────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this contrast paragraph about eating at home vs. eating at a restaurant.",
+  sentences:[
+    {text:"1. Cooking at home is usually much cheaper, whereas eating out can quickly become expensive.", correct:false, hint:"This is a clear contrast using <em>whereas</em>. It belongs in the paragraph."},
+    {text:"2. Home-cooked meals are often healthier, while restaurant food tends to contain more oil and salt.", correct:false, hint:"This contrasts the healthiness of two options using <em>while</em>. It fits the paragraph well."},
+    {text:"3. Both home cooking and eating at restaurants can be enjoyable social experiences.", correct:true, hint:"Notice the word <em>both</em>. Does this sentence contrast the two options, or does it show something they have in common?"},
+    {text:"4. In contrast, eating out offers more variety and saves time on preparation and cleaning.", correct:false, hint:"This uses <em>in contrast</em> and highlights a difference. It belongs in a contrast paragraph."},
+  ],
+  explanation:"Sentence 3 is the odd one out. It uses <em>'both'</em> to show a similarity — but this is a contrast paragraph. Every other sentence uses contrast signal words (<em>whereas, while, in contrast</em>) to highlight differences. A similarity sentence disrupts the paragraph's unity."
+},
+
+// ── 12. CONCLUDING SENTENCE — Opinion ────────────────────────
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  instruction:"Choose the best <strong>concluding sentence</strong> for this opinion paragraph.",
+  body:"I believe that students should wear school uniforms. First, uniforms create a sense of equality among students — when everyone wears the same clothes, no one feels pressure to buy expensive brands or keep up with the latest fashion trends. In addition, wearing a uniform helps students focus on their studies rather than on appearance, as there are fewer clothing-related distractions in the classroom. Furthermore, uniforms give schools a professional and organised image, which can positively affect how students, staff, and visitors feel about the learning environment. Research also suggests that schools with uniform policies tend to report better discipline and a stronger sense of community spirit among their students.",
+  options:[
+    {text:"School uniforms are available in many different styles and colours.", correct:false},
+    {text:"However, not all students agree with wearing uniforms.", correct:false},
+    {text:"For these reasons, it is clear that school uniforms benefit both students and schools as a whole.", correct:true},
+    {text:"Students should also learn about the history of school uniforms.", correct:false},
+  ],
+  hints:[
+    "This introduces a new detail (styles and colours) that was never discussed. A concluding sentence must summarise what was already said — it cannot add new information.",
+    "This introduces doubt or counter-argument. A concluding sentence should close your opinion by restating it — not open it up to challenge.",
+    null,
+    "This suggests a completely new idea (history of uniforms). A concluding sentence looks <em>back</em> at the paragraph — not forward to something new.",
+  ],
+  explanation:"Option C is correct. <em>'For these reasons, it is clear that...'</em> is a classic concluding signal phrase. It restates the opinion (uniforms are beneficial) in new words and links back to all three supporting points without adding new information."
+},
+
+// ── 13. CONCLUDING SENTENCE — Cause ──────────────────────────
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  instruction:"Choose the best <strong>concluding sentence</strong> for this cause paragraph.",
+  body:"There are several reasons why young people move to big cities. One reason is better job opportunities, as large cities have more diverse industries and a higher concentration of employers looking for skilled workers. Another cause is access to higher education, since most universities and colleges are located in urban areas, making city life a natural choice for students planning their future. Additionally, many young people are attracted by the cultural life that cities offer — the restaurants, music venues, galleries, and social events that simply do not exist in smaller towns. Finally, cities tend to provide better public transport, healthcare facilities, and overall infrastructure, making everyday life more convenient and comfortable for young adults who are just starting out independently.",
+  options:[
+    {text:"In conclusion, employment, education, and lifestyle are the main factors that draw young people to cities.", correct:true},
+    {text:"As a result, cities are becoming more and more crowded every year.", correct:false},
+    {text:"Therefore, the government should build more universities in rural areas.", correct:false},
+    {text:"Young people also enjoy the nightlife and entertainment options in big cities.", correct:false},
+  ],
+  hints:[
+    null,
+    "<em>'As a result'</em> introduces an effect (crowded cities) — but this is a cause paragraph. The concluding sentence should summarise the causes discussed, not introduce an effect.",
+    "This is a recommendation or opinion — what someone should do. A cause paragraph concludes by restating the causes, not by suggesting solutions.",
+    "This introduces a new cause (nightlife) that wasn't in the paragraph. A concluding sentence cannot add new supporting points.",
+  ],
+  explanation:"Option A is correct. <em>'In conclusion'</em> signals the end, and the sentence neatly summarises all three causes: employment, education, and lifestyle. It restates the main idea without adding any new information."
+},
+
+// ── 14. CONCLUDING SENTENCE — Effect ─────────────────────────
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  instruction:"Choose the best <strong>concluding sentence</strong> for this effect paragraph.",
+  body:"Spending too much money has several serious negative consequences. First, it often leads to debt, as people borrow money or rely on credit cards to cover expenses they cannot actually afford to pay back. Consequently, this growing debt creates financial stress and anxiety, which can damage personal relationships and cause serious arguments between partners or family members. Furthermore, people who overspend frequently experience feelings of guilt and regret when they realise they have spent money on things they did not truly need, which gradually harms their mental wellbeing and self-confidence. In addition, chronic overspending makes it almost impossible to save for the future, leaving people without any financial safety net when unexpected emergencies — such as job loss or medical bills — arise.",
+  options:[
+    {text:"People should always create a monthly budget to manage their spending.", correct:false},
+    {text:"There are many reasons why people spend more money than they have.", correct:false},
+    {text:"Overall, overspending can seriously harm a person's finances, relationships, and mental health.", correct:true},
+    {text:"In addition, some people turn to credit cards when they run out of cash.", correct:false},
+  ],
+  hints:[
+    "This gives advice about budgeting — a recommendation, not a summary of effects. A concluding sentence for an effects paragraph wraps up the consequences already discussed.",
+    "This reads like a cause topic sentence. The paragraph explains <em>effects</em>, not causes. Don't shift the focus in your final sentence.",
+    null,
+    "This adds a brand new supporting point (credit cards). A concluding sentence closes the paragraph — it never introduces new ideas.",
+  ],
+  explanation:"Option C is correct. <em>'Overall'</em> signals a conclusion, and the sentence summarises all three effects: financial harm (debt), relationship damage, and mental health effects. Clean, complete, no new information."
+},
+
+// ── 15. CONCLUDING SENTENCE — Similarity ─────────────────────
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  instruction:"Choose the best <strong>concluding sentence</strong> for this similarity paragraph.",
+  body:"Tea and coffee have more in common than most people think. Both drinks are typically consumed hot and are a central part of morning routines in countries around the world, from Turkey and Japan to Italy and the United Kingdom. Similarly, both contain caffeine, which helps people feel more alert, focused, and ready to begin their day. In the same way, both beverages are deeply connected to social customs — people offer tea or coffee to guests as a sign of welcome, and friends often meet over a cup to catch up and relax. Furthermore, both drinks come in a wide variety of regional styles and preparations, reflecting the rich cultural traditions of the places where they are most enjoyed.",
+  options:[
+    {text:"However, tea and coffee taste very different from each other.", correct:false},
+    {text:"Coffee is more popular than tea in many Western countries.", correct:false},
+    {text:"To sum up, tea and coffee are alike in their daily role, their effects on the body, and their social importance.", correct:true},
+    {text:"There are also many different types of both tea and coffee available.", correct:false},
+  ],
+  hints:[
+    "This introduces a contrast (<em>taste very different</em>), which contradicts the paragraph's focus on similarities. Never end a similarities paragraph with a contrasting idea.",
+    "This is a general fact about popularity that was never discussed. A concluding sentence must relate to what was actually said in the paragraph.",
+    null,
+    "This adds a new idea (different varieties) that wasn't in the paragraph. Concluding sentences summarise what was already discussed — they don't open new topics.",
+  ],
+  explanation:"Option C is correct. <em>'To sum up'</em> is a clear concluding signal. The sentence restates all three similarities discussed: daily routine use, caffeine effects, and social customs — in new words, without adding anything new."
+},
+
+// ── 16. CONCLUDING SENTENCE — Contrast ───────────────────────
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  instruction:"Choose the best <strong>concluding sentence</strong> for this contrast paragraph.",
+  body:"Online classes and traditional classroom learning are very different experiences for students. Online students can study at any time from home and pause or replay recorded lessons, while classroom students must attend at fixed hours and keep up with the pace set by their teacher. In addition, online learning relies heavily on videos, discussion boards, and digital assignments, whereas traditional classes involve face-to-face discussion, group activities, and hands-on tasks. Furthermore, the social experience is quite different — classroom students build friendships through daily in-person interaction, while online students may rarely meet their classmates face to face. Finally, online students must be highly self-disciplined and manage their time entirely independently, but classroom students receive direct, immediate support and feedback from their teachers throughout the lesson.",
+  options:[
+    {text:"Both online and classroom learning help students gain knowledge and skills.", correct:false},
+    {text:"In conclusion, online and traditional learning differ in flexibility, method, and the level of support students receive.", correct:true},
+    {text:"Many students prefer online learning because it is more convenient.", correct:false},
+    {text:"Furthermore, there are also differences in the cost of online and classroom education.", correct:false},
+  ],
+  hints:[
+    "This introduces a similarity (<em>'both help students'</em>) at the end of a contrast paragraph. The conclusion must reinforce the differences, not blur them with similarities.",
+    null,
+    "This is an opinion about student preferences — a new idea not discussed in the paragraph. Concluding sentences must reflect the paragraph's content, not introduce personal views.",
+    "<em>'Furthermore'</em> signals addition, not conclusion. This would extend the paragraph rather than close it — and it adds a new difference (cost) never discussed before.",
+  ],
+  explanation:"Option B is correct. <em>'In conclusion'</em> signals the end, and the sentence accurately summarises all three contrasts: flexibility (timing), method (digital vs face-to-face), and support (independent vs teacher-led). Clean and complete."
+},
+
+// ── 17. SIGNAL WORDS — Cause ──────────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses a <strong>cause signal word</strong>.",
+  options:[
+    {text:"She didn't study for the exam. Therefore, she failed.", correct:false},
+    {text:"He was late for class because he missed the bus.", correct:true},
+    {text:"Both students worked hard and got good results.", correct:false},
+    {text:"The city is very crowded, whereas the village is quiet.", correct:false},
+  ],
+  hints:[
+    "<em>Therefore</em> is an <strong>effect</strong> signal word — it introduces what happens as a result of something. We need a word that introduces the <em>reason</em> why something happened.",
+    null,
+    "<em>Both</em> is a <strong>similarity</strong> signal word — it shows that two things share something in common. It has no cause-effect meaning.",
+    "<em>Whereas</em> is a <strong>contrast</strong> signal word — it shows a difference. It doesn't explain why something happened.",
+  ],
+  explanation:"<em>Because</em> is a cause signal word — it introduces the reason why something happened. 'He missed the bus' is the cause; 'he was late' is the effect. Other cause signal words from your book: <em>due to, since, because of</em>."
+},
+
+// ── 18. SIGNAL WORDS — Effect ─────────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses an <strong>effect signal word</strong>.",
+  options:[
+    {text:"She was nervous since it was her first job interview.", correct:false},
+    {text:"Both running and swimming are excellent forms of exercise.", correct:false},
+    {text:"The roads were icy. As a result, several accidents occurred.", correct:true},
+    {text:"Although it was raining, they continued the match.", correct:false},
+  ],
+  hints:[
+    "<em>Since</em> here introduces a <strong>cause</strong> (the reason she was nervous). We're looking for a word that introduces what happens <em>as a consequence</em> of something.",
+    "<em>Both</em> is a <strong>similarity</strong> signal word. It doesn't show a cause-effect relationship.",
+    null,
+    "<em>Although</em> is a <strong>contrast</strong> signal word — it links two unexpected ideas. It doesn't introduce a result or consequence.",
+  ],
+  explanation:"<em>As a result</em> is an effect signal word — it introduces the consequence of the icy roads. Other effect signal words from your book: <em>therefore, thus, consequently, hence, so</em>."
+},
+
+// ── 19. SIGNAL WORDS — Similarity ────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses a <strong>similarity signal word</strong>.",
+  options:[
+    {text:"My brother loves football. In contrast, I prefer basketball.", correct:false},
+    {text:"She didn't pass the exam due to poor preparation.", correct:false},
+    {text:"Tokyo is a busy, exciting city. Likewise, New York never seems to slow down.", correct:true},
+    {text:"He works very hard. However, he rarely gets promoted.", correct:false},
+  ],
+  hints:[
+    "<em>In contrast</em> is a <strong>contrast</strong> signal word — it introduces a difference. We need a word that shows two things are <em>alike</em>.",
+    "<em>Due to</em> is a <strong>cause</strong> signal word — it introduces the reason something happened. It has nothing to do with similarity.",
+    null,
+    "<em>However</em> is a <strong>contrast</strong> signal word — it introduces an unexpected or opposing idea. It doesn't show similarity.",
+  ],
+  explanation:"<em>Likewise</em> is a similarity signal word — it introduces a quality shared by two things. Tokyo's energy and New York's energy are presented as alike. Other similarity signal words from your book: <em>similarly, both, in the same way, too, also, just like</em>."
+},
+
+// ── 20. SIGNAL WORDS — Contrast ──────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses a <strong>contrast signal word</strong>.",
+  options:[
+    {text:"She studied all night. Consequently, she passed the test.", correct:false},
+    {text:"Both coffee and tea contain caffeine.", correct:false},
+    {text:"He enjoys cooking at home, whereas his wife prefers eating out.", correct:true},
+    {text:"They arrived late because the traffic was very heavy.", correct:false},
+  ],
+  hints:[
+    "<em>Consequently</em> is an <strong>effect</strong> signal word — it shows what happened as a result of studying. We need a word that highlights a <em>difference</em> between two things.",
+    "<em>Both</em> is a <strong>similarity</strong> signal word — it shows something shared. We need a contrast signal word here.",
+    null,
+    "<em>Because</em> is a <strong>cause</strong> signal word — it introduces the reason. It doesn't show contrast.",
+  ],
+  explanation:"<em>Whereas</em> is a contrast signal word — it shows a clear difference between two people or ideas in a single sentence. He prefers home cooking; she prefers eating out — a direct contrast. Other contrast signal words: <em>however, although, while, on the other hand, in contrast, but, even though</em>."
+},
+
+// ── 21. PARAGRAPH TYPE — Cause ────────────────────────────────
+{
+  type:"mc", typeLabel:"Paragraph Type", typeClass:"tag-ps",
+  instruction:"Read the paragraph and identify its <strong>type</strong>.",
+  body:"Many people struggle to get enough sleep due to several factors. First, the use of phones and screens before bedtime disrupts the body's natural production of melatonin, a hormone that signals to the brain that it is time to sleep. Another reason is work-related stress, since many people find it genuinely difficult to switch off from their responsibilities even after leaving the office. Furthermore, irregular schedules — such as shift work, late-night studying, or frequent travel across time zones — prevent the body from developing a consistent and healthy sleep routine. Finally, environmental factors such as noise, light pollution, and uncomfortable room temperatures can make it physically difficult to fall or stay asleep. In conclusion, poor sleep is caused by a combination of lifestyle, psychological, and environmental factors that many people face in modern life.",
+  options:[
+    {text:"📖 Effect paragraph", correct:false},
+    {text:"💬 Opinion paragraph", correct:false},
+    {text:"🔍 Cause paragraph", correct:true},
+    {text:"⚖️ Contrast paragraph", correct:false},
+  ],
+  hints:[
+    "An effect paragraph explains what <em>happens as a result</em> of something. This paragraph doesn't describe results — it explains <em>why</em> people struggle to sleep. Check the signal words.",
+    "An opinion paragraph states the writer's personal view using phrases like <em>I believe</em> or <em>In my opinion</em>. No personal claim is made in this paragraph.",
+    null,
+    "A contrast paragraph compares two different things. This paragraph focuses on one topic (sleep) and gives reasons — there are no two subjects being compared.",
+  ],
+  explanation:"This is a <strong>cause paragraph</strong>. The topic sentence signals reasons (<em>'due to several factors'</em>), and each supporting sentence introduces a cause using: <em>first, another reason is, since, finally</em>. No effects, opinions, or comparisons — only reasons why people sleep poorly."
+},
+
+// ── 22. PARAGRAPH TYPE — Contrast ────────────────────────────
+{
+  type:"mc", typeLabel:"Paragraph Type", typeClass:"tag-ps",
+  instruction:"Read the paragraph and identify its <strong>type</strong>.",
+  body:"Living in a big city and living in a small town offer very different lifestyles. City residents have easy access to hospitals, shops, entertainment venues, and public transport, while small-town residents often need to travel long distances for the same services. In addition, cities offer far more career opportunities and higher average salaries, whereas small towns tend to have fewer employers and a more limited job market. On the other hand, small towns are generally quieter, safer, and less polluted, whereas city life can be noisy, stressful, and overwhelming. Finally, the cost of living — especially housing — is significantly higher in cities, while small towns offer more affordable rents and a lower overall cost of daily life. In conclusion, both environments have clear advantages, and the right choice depends on a person's priorities and lifestyle.",
+  options:[
+    {text:"🔍 Cause paragraph", correct:false},
+    {text:"🤝 Similarity paragraph", correct:false},
+    {text:"💬 Opinion paragraph", correct:false},
+    {text:"⚖️ Contrast paragraph", correct:true},
+  ],
+  hints:[
+    "A cause paragraph explains <em>why</em> something happens. This paragraph doesn't explain any reasons — it describes differences between two places.",
+    "A similarity paragraph focuses on how two things are <em>alike</em>. This paragraph uses <em>while, on the other hand, whereas</em> — these are all contrast, not similarity, signal words.",
+    "An opinion paragraph states the writer's personal position using opinion language. Although the paragraph compares two environments, no personal preference is stated.",
+    null,
+  ],
+  explanation:"This is a <strong>contrast paragraph</strong>. Every supporting sentence highlights a difference using clear contrast signal words: <em>while, on the other hand, whereas</em>. The topic sentence also signals contrast: <em>'very different lifestyles'</em>."
+},
+
+// ── 23. PARAGRAPH TYPE — Opinion ─────────────────────────────
+{
+  type:"mc", typeLabel:"Paragraph Type", typeClass:"tag-ps",
+  instruction:"Read the paragraph and identify its <strong>type</strong>.",
+  body:"I think that every university student should study abroad for at least one semester. First, living in another country forces students to become more independent, as they must solve everyday problems — from managing finances to navigating a new city — entirely on their own. In addition, experiencing a different culture broadens perspectives and makes people significantly more open-minded and tolerant of viewpoints that are different from their own. Furthermore, international experience gives graduates a significant advantage in the job market, as many employers actively seek candidates who have demonstrated adaptability and cross-cultural communication skills. For these reasons, studying abroad should be considered an essential and valuable part of every university programme, and institutions should do more to make it financially accessible to all students.",
+  options:[
+    {text:"📖 Effect paragraph", correct:false},
+    {text:"💬 Opinion paragraph", correct:true},
+    {text:"🤝 Similarity paragraph", correct:false},
+    {text:"🔍 Cause paragraph", correct:false},
+  ],
+  hints:[
+    "An effect paragraph describes results or consequences neutrally. While this paragraph mentions some benefits, it does so to support a personal argument — the key is the writer's clear position and opinion language at the start.",
+    null,
+    "A similarity paragraph compares two things to show how they are alike. This paragraph focuses on one topic (studying abroad) and argues for a position — nothing is being compared.",
+    "A cause paragraph explains why something happens. This paragraph doesn't explain reasons for a phenomenon — it argues that students <em>should</em> do something.",
+  ],
+  explanation:"This is an <strong>opinion paragraph</strong>. The topic sentence opens with <em>'I think that'</em> — a clear opinion signal. The supporting sentences give reasons to support the writer's claim, and the concluding sentence restates the opinion. The goal is to persuade, not to explain or compare neutrally."
+},
+
+// ── 24. FACT vs. OPINION ─────────────────────────────────────
+{
+  type:"mc", typeLabel:"Fact or Opinion?", typeClass:"tag-fo",
+  instruction:"Which of these sentences is an <strong>opinion</strong>?",
+  options:[
+    {text:"The Amazon rainforest covers more than 5.5 million square kilometres.", correct:false},
+    {text:"Travelling is the best way to learn about the world.", correct:true},
+    {text:"Water freezes at 0°C at sea level.", correct:false},
+    {text:"The first modern Olympic Games were held in Athens in 1896.", correct:false},
+  ],
+  hints:[
+    "This can be verified with a map or scientific data — it is a measurable, provable fact. Facts don't depend on personal belief.",
+    null,
+    "This is a scientific law that can be tested and proven repeatedly. It is a fact, not a personal belief.",
+    "This is a historical fact that can be confirmed through records. It is not a matter of personal opinion.",
+  ],
+  explanation:"Option B is an opinion. <em>'The best way'</em> is a subjective judgement — not everyone would agree. People can learn about the world through books, conversations, or documentaries. Key rule: if reasonable people can disagree, it is likely an opinion. Opinions cannot be proven true or false."
+},
+
+// ── 25. FACT vs. OPINION — Topic Sentence ────────────────────
+{
+  type:"mc", typeLabel:"Fact or Opinion?", typeClass:"tag-fo",
+  instruction:"Which of these would make the best <strong>topic sentence for an opinion paragraph</strong> about social media?",
+  options:[
+    {text:"Social media platforms were first developed in the late 1990s.", correct:false},
+    {text:"Billions of people around the world use social media every day.", correct:false},
+    {text:"It is clear that social media does more harm than good for young people.", correct:true},
+    {text:"Social media allows users to share photos, videos, and messages.", correct:false},
+  ],
+  hints:[
+    "This is a historical fact — it can be verified. A topic sentence for an opinion paragraph must express a personal position or viewpoint, not a fact.",
+    "This is a factual statistic. An opinion topic sentence must take a clear position — it should tell the reader what the writer <em>believes</em>, not just what is numerically true.",
+    null,
+    "This is a factual description of what social media does. It doesn't take any position for or against social media — it is neutral and descriptive.",
+  ],
+  explanation:"Option C is correct. <em>'It is clear that... does more harm than good'</em> is a strong, arguable opinion — many people would debate this. This is exactly what a topic sentence for an opinion paragraph needs: a clear, debatable claim. Facts describe what <em>is</em>; opinion topic sentences argue what the writer <em>believes</em>."
+},
+
+]; // end questions
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let current = 0, score = 0;
+let userAnswers = [];      // {correct, firstTry, label}
+let hintedThisQ = false;   // did we show a hint before answering?
+
+// ─────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────
+function renderQuestion() {
+  hintedThisQ = false;
+  const q = questions[current];
+  const area = document.getElementById("quiz-area");
+  area.innerHTML = "";
+
+  document.getElementById("prog-label").textContent = `Question ${current+1} of ${questions.length}`;
+  document.getElementById("score-label").textContent = `Score: ${score}`;
+  document.getElementById("prog-fill").style.width = `${((current+1)/questions.length)*100}%`;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="card-tag">
+      <span class="tag-pill ${q.typeClass}">${q.typeLabel}</span>
+    </div>
+    <div class="card-body">
+      <p class="question-text">${q.instruction}</p>
+      ${q.body ? `<div class="para-box">${q.body}</div>` : ""}
+      <div id="interaction-area"></div>
+      <div class="hint-box" id="hint-box"></div>
+      <div class="show-why-wrap" id="show-why-wrap">
+        <button class="show-why-btn" id="show-why-btn">Show me why →</button>
+      </div>
+      <div class="feedback" id="feedback-box"></div>
+    </div>
+  `;
+  area.appendChild(card);
+
+  const nextWrap = document.createElement("div");
+  nextWrap.className = "next-wrap";
+  nextWrap.id = "next-wrap";
+  const isLast = current === questions.length - 1;
+  nextWrap.innerHTML = `<button class="next-btn" onclick="${isLast ? 'showResults()' : 'nextQuestion()'}">${isLast ? "See Results →" : "Next Question →"}</button>`;
+  card.appendChild(nextWrap);
+
+  if (q.type === "odd") buildOdd(q);
+  else buildMC(q);
+}
+
+// ─── MULTIPLE CHOICE ──────────────────────────────────────────
+function buildMC(q) {
+  const ia = document.getElementById("interaction-area");
+  const letters = ["A","B","C","D"];
+  const div = document.createElement("div");
+  div.className = "options";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn";
+    btn.dataset.idx = i;
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt.text}</span>`;
+    btn.onclick = () => handleMC(q, i, div);
+    div.appendChild(btn);
+  });
+  ia.appendChild(div);
+}
+
+function handleMC(q, idx, container) {
+  const btns = container.querySelectorAll(".option-btn");
+  const isCorrect = q.options[idx].correct;
+
+  if (isCorrect) {
+    // correct on first try (no hint shown) or after hint
+    btns.forEach(b => b.disabled = true);
+    btns[idx].classList.add("state-correct");
+    // highlight correct (same)
+    showFeedback(true, q.explanation);
+    const firstTry = !hintedThisQ;
+    if (firstTry) score++;
+    userAnswers.push({correct:true, firstTry, label: q.options[idx].text.substring(0,60)});
+    document.getElementById("score-label").textContent = `Score: ${score}`;
+    document.getElementById("next-wrap").classList.add("show");
+  } else {
+    // wrong
+    hintedThisQ = true;
+    btns[idx].classList.add("state-hinted");
+    btns[idx].disabled = true;
+
+    // show distractor hint
+    const hintText = q.hints[idx];
+    const hintBox = document.getElementById("hint-box");
+    hintBox.innerHTML = `<div class="hint-label">💡 Hint</div>${hintText}`;
+    hintBox.classList.add("show");
+
+    // show "show me why" button
+    const showWrap = document.getElementById("show-why-wrap");
+    showWrap.classList.add("show");
+    document.getElementById("show-why-btn").onclick = () => revealMC(q, idx, container);
+  }
+}
+
+function revealMC(q, clickedIdx, container) {
+  const btns = container.querySelectorAll(".option-btn");
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (q.options[i].correct) b.classList.add("state-reveal-correct");
+    else if (i === clickedIdx) b.classList.add("state-wrong");
+  });
+  document.getElementById("show-why-wrap").classList.remove("show");
+  showFeedback(false, q.explanation);
+  userAnswers.push({correct:false, firstTry:false, label: q.options[clickedIdx].text.substring(0,60)});
+  document.getElementById("next-wrap").classList.add("show");
+}
+
+// ─── ODD ONE OUT ──────────────────────────────────────────────
+function buildOdd(q) {
+  const ia = document.getElementById("interaction-area");
+  const div = document.createElement("div");
+  div.className = "sentences";
+  q.sentences.forEach((s, i) => {
+    const btn = document.createElement("button");
+    btn.className = "sentence-btn";
+    btn.innerHTML = s.text;
+    btn.dataset.idx = i;
+    btn.onclick = () => handleOdd(q, i, div);
+    div.appendChild(btn);
+  });
+  ia.appendChild(div);
+}
+
+function handleOdd(q, idx, container) {
+  const btns = container.querySelectorAll(".sentence-btn");
+  const isCorrect = q.sentences[idx].correct;
+
+  if (isCorrect) {
+    btns.forEach(b => b.disabled = true);
+    btns[idx].classList.add("state-correct");
+    showFeedback(true, q.explanation);
+    const firstTry = !hintedThisQ;
+    if (firstTry) score++;
+    userAnswers.push({correct:true, firstTry, label: q.sentences[idx].text.substring(0,60)});
+    document.getElementById("score-label").textContent = `Score: ${score}`;
+    document.getElementById("next-wrap").classList.add("show");
+  } else {
+    hintedThisQ = true;
+    btns[idx].classList.add("state-hinted");
+    btns[idx].disabled = true;
+
+    const hintText = q.sentences[idx].hint;
+    const hintBox = document.getElementById("hint-box");
+    hintBox.innerHTML = `<div class="hint-label">💡 Hint</div>${hintText}`;
+    hintBox.classList.add("show");
+
+    const showWrap = document.getElementById("show-why-wrap");
+    showWrap.classList.add("show");
+    document.getElementById("show-why-btn").onclick = () => revealOdd(q, idx, container);
+  }
+}
+
+function revealOdd(q, clickedIdx, container) {
+  const btns = container.querySelectorAll(".sentence-btn");
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (q.sentences[i].correct) b.classList.add("state-reveal-correct");
+    else if (i === clickedIdx) b.classList.add("state-reveal-wrong");
+  });
+  document.getElementById("show-why-wrap").classList.remove("show");
+  showFeedback(false, q.explanation);
+  userAnswers.push({correct:false, firstTry:false, label: q.sentences[clickedIdx].text.substring(0,60)});
+  document.getElementById("next-wrap").classList.add("show");
+}
+
+// ─── FEEDBACK ─────────────────────────────────────────────────
+function showFeedback(isCorrect, explanation) {
+  const box = document.getElementById("feedback-box");
+  const hintBox = document.getElementById("hint-box");
+  hintBox.classList.remove("show"); // hide hint when full explanation shows
+  document.getElementById("show-why-wrap").classList.remove("show");
+  box.className = `feedback show ${isCorrect ? "fb-correct" : "fb-wrong"}`;
+  box.innerHTML = (isCorrect ? "<strong>✓ Correct!</strong> " : "<strong>Here's why:</strong> ") + explanation;
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────
+function nextQuestion() {
+  current++;
+  renderQuestion();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+// ─── RESULTS ──────────────────────────────────────────────────
+function showResults() {
+  document.getElementById("quiz-area").style.display = "none";
+  document.querySelector(".progress-wrap").style.display = "none";
+  const screen = document.getElementById("results-screen");
+  screen.classList.add("show");
+
+  const pct = score / questions.length;
+  const circumference = 345.4;
+  setTimeout(() => {
+    document.getElementById("ring-fill").style.strokeDashoffset = circumference - pct * circumference;
+  }, 100);
+
+  document.getElementById("score-display").textContent = `${score}/${questions.length}`;
+
+  let title, sub;
+  if (pct === 1)        { title = "Perfect score! 🎉"; sub = "Outstanding — you've mastered every concept!"; }
+  else if (pct >= 0.88) { title = "Excellent work! ✨"; sub = "You have a strong command of paragraph structure."; }
+  else if (pct >= 0.72) { title = "Well done! 👍"; sub = "Solid understanding — review the questions you found tricky."; }
+  else if (pct >= 0.56) { title = "Good effort! 📝"; sub = "You're on the right track. Try again to improve your score."; }
+  else                  { title = "Keep practising! 📚"; sub = "Every mistake is a learning moment. Give it another go!"; }
+
+  document.getElementById("results-title").textContent = title;
+  document.getElementById("results-sub").textContent   = sub;
+
+  const reviewList = document.getElementById("review-list");
+  questions.forEach((q, i) => {
+    const ua = userAnswers[i];
+    const div = document.createElement("div");
+    div.className = "review-item";
+    const icon = !ua ? "⬜" : (ua.correct && ua.firstTry ? "✅" : ua.correct ? "✅" : "❌");
+    const triesNote = ua && ua.correct && !ua.firstTry ? " (needed a hint)" : ua && !ua.correct ? " (shown answer)" : "";
+    div.innerHTML = `
+      <span class="review-icon">${icon}</span>
+      <div>
+        <div class="review-q">Q${i+1} · ${q.typeLabel}</div>
+        <div class="review-ans">${ua ? ua.label + "…" : "Not answered"}</div>
+        ${triesNote ? `<div class="review-tries">${triesNote}</div>` : ""}
+      </div>`;
+    reviewList.appendChild(div);
+  });
+
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function restart() {
+  current = 0; score = 0; userAnswers = [];
+  document.getElementById("results-screen").classList.remove("show");
+  document.getElementById("quiz-area").style.display = "";
+  document.querySelector(".progress-wrap").style.display = "";
+  renderQuestion();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+// kick off
+renderQuestion();
+</script>
+</body>
+</html>

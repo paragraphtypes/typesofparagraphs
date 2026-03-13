@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paragraph Skills — Set 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --ink: #1a1a2e;
+    --muted: #6b6b80;
+    --accent: #2d6a6a;
+    --accent-light: #e0f0f0;
+    --gold: #c6963a;
+    --correct: #2d7a4a;
+    --correct-bg: #e8f7ee;
+    --wrong: #b33030;
+    --wrong-bg: #fdecea;
+    --hint-bg: #fffbea;
+    --hint-border: #f0c040;
+    --hint-text: #7a5c00;
+    --border: #e4ddd4;
+    --shadow: 0 4px 24px rgba(26,26,46,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; color: var(--ink); padding: 0 16px 60px; }
+
+  .header { text-align: center; padding: 48px 16px 32px; }
+  .header .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px,5vw,42px); color: var(--ink); line-height: 1.2; }
+  .header p { margin-top: 10px; color: var(--muted); font-size: 15px; max-width: 520px; margin-left: auto; margin-right: auto; }
+
+  .progress-wrap { max-width: 680px; margin: 0 auto 32px; padding: 0 8px; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .progress-bar-track { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--gold)); border-radius: 99px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+
+  .card { max-width: 680px; margin: 0 auto; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; animation: fadeUp 0.4s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+  .card-tag { display: flex; align-items: center; gap: 10px; padding: 18px 28px; border-bottom: 1px solid var(--border); background: #fafafa; }
+  .tag-pill { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; }
+  .tag-ts  { background: #dbeafe; color: #1e40af; }
+  .tag-ooo { background: #fce7f3; color: #9d174d; }
+  .tag-cs  { background: #d1fae5; color: #065f46; }
+  .tag-ps  { background: #ede9fe; color: #5b21b6; }
+  .tag-sw  { background: #fff3cd; color: #92400e; }
+  .tag-fo  { background: #fee2e2; color: #991b1b; }
+
+  .card-body { padding: 28px 28px 10px; }
+  .question-text { font-size: 16px; font-weight: 500; line-height: 1.65; color: var(--ink); margin-bottom: 22px; }
+  .para-box { background: var(--bg); border-left: 4px solid var(--gold); border-radius: 0 10px 10px 0; padding: 16px 20px; font-size: 14.5px; line-height: 1.8; color: #333; margin-bottom: 22px; font-style: italic; }
+
+  .challenge-note { display: inline-block; margin-bottom: 16px; padding: 6px 14px; background: #fff8e1; border: 1px solid var(--gold); border-radius: 8px; font-size: 12.5px; font-weight: 600; color: var(--hint-text); }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; padding: 14px 18px; border: 2px solid var(--border); border-radius: 12px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 14.5px; line-height: 1.55; color: var(--ink); cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.1s; }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-light); transform: translateX(3px); }
+  .option-btn:disabled { cursor: default; }
+  .option-btn.state-correct { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); font-weight: 600; }
+  .option-btn.state-wrong { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); }
+  .option-btn.state-hinted { border-color: var(--hint-border); background: var(--hint-bg); }
+  .option-btn.state-reveal-correct { border-color: var(--correct); background: var(--correct-bg); color: var(--correct); font-weight: 600; }
+  .opt-letter { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; margin-top: 1px; border-radius: 50%; background: var(--border); font-size: 12px; font-weight: 700; transition: background 0.2s, color 0.2s; }
+  .option-btn.state-correct .opt-letter, .option-btn.state-reveal-correct .opt-letter { background: var(--correct); color: #fff; }
+  .option-btn.state-wrong .opt-letter { background: var(--wrong); color: #fff; }
+  .option-btn.state-hinted .opt-letter { background: var(--hint-border); color: #fff; }
+
+  .sentences { display: flex; flex-direction: column; gap: 10px; }
+  .sentence-btn { width: 100%; text-align: left; padding: 13px 18px; border: 2px solid var(--border); border-radius: 12px; background: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.65; color: var(--ink); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  .sentence-btn:hover:not(:disabled) { border-color: #9d174d; background: #fce7f3; }
+  .sentence-btn:disabled { cursor: default; }
+  .sentence-btn.state-correct { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); font-weight: 600; }
+  .sentence-btn.state-hinted { border-color: var(--hint-border); background: var(--hint-bg); }
+  .sentence-btn.state-reveal-correct { border-color: var(--wrong); background: var(--wrong-bg); color: var(--wrong); font-weight: 600; }
+  .sentence-btn.state-reveal-wrong { border-color: var(--border); opacity: 0.6; }
+
+  .hint-box { display: none; margin-top: 14px; padding: 12px 16px; border-radius: 10px; background: var(--hint-bg); border: 1px solid var(--hint-border); font-size: 13.5px; line-height: 1.6; color: var(--hint-text); }
+  .hint-box.show { display: block; animation: fadeUp 0.25s ease both; }
+  .hint-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--hint-border); margin-bottom: 5px; }
+
+  .show-why-wrap { display: none; margin-top: 10px; }
+  .show-why-wrap.show { display: block; }
+  .show-why-btn { background: none; border: 2px solid var(--ink); border-radius: 10px; padding: 9px 18px; font-family: 'DM Sans', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ink); cursor: pointer; transition: background 0.2s, color 0.2s; }
+  .show-why-btn:hover { background: var(--ink); color: #fff; }
+
+  .feedback { display: none; margin-top: 14px; padding: 14px 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; }
+  .feedback.show { display: block; animation: fadeUp 0.3s ease both; }
+  .feedback.fb-correct { background: var(--correct-bg); color: #065f46; border: 1px solid #a7f3d0; }
+  .feedback.fb-wrong { background: #f0f4ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+
+  .next-wrap { padding: 14px 28px 28px; display: none; }
+  .next-wrap.show { display: block; }
+  .next-btn { width: 100%; padding: 14px; background: var(--ink); color: #fff; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; letter-spacing: 0.3px; transition: background 0.2s, transform 0.1s; }
+  .next-btn:hover { background: var(--accent); transform: translateY(-1px); }
+
+  .results { display: none; max-width: 680px; margin: 0 auto; animation: fadeUp 0.4s ease both; }
+  .results.show { display: block; }
+  .results-card { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); padding: 40px 28px; text-align: center; }
+  .score-ring { width: 130px; height: 130px; margin: 0 auto 24px; position: relative; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .ring-bg { fill: none; stroke: var(--border); stroke-width: 10; }
+  .score-ring .ring-fill { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .score-number { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Playfair Display', serif; font-size: 30px; color: var(--ink); }
+  .results-title { font-family: 'Playfair Display', serif; font-size: 26px; margin-bottom: 8px; }
+  .results-sub { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  .divider { width: 40px; height: 3px; background: var(--gold); border-radius: 99px; margin: 0 auto 20px; }
+  .review { text-align: left; margin-top: 24px; }
+  .review-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 14px; line-height: 1.5; }
+  .review-item:last-child { border-bottom: none; }
+  .review-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .review-q { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .review-ans { color: var(--ink); margin-top: 2px; }
+  .review-tries { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .restart-btn { margin-top: 28px; width: 100%; padding: 14px; background: var(--ink); color: #fff; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .restart-btn:hover { background: var(--accent); }
+  @media (max-width: 480px) { .card-body { padding: 20px 18px 10px; } .card-tag { padding: 14px 18px; } .next-wrap { padding: 12px 18px 22px; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">English Writing Skills — Set 2</div>
+  <h1>Paragraph Mastery</h1>
+  <p>Social media · Podcasts · Books vs Films · School start times · Fast fashion</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-meta">
+    <span id="prog-label">Question 1 of 25</span>
+    <span id="score-label">Score: 0</span>
+  </div>
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="prog-fill" style="width:4%"></div>
+  </div>
+</div>
+
+<div id="quiz-area"></div>
+
+<div class="results" id="results-screen">
+  <div class="results-card">
+    <div class="score-ring">
+      <svg viewBox="0 0 130 130" width="130" height="130">
+        <circle class="ring-bg" cx="65" cy="65" r="55"/>
+        <circle class="ring-fill" id="ring-fill" cx="65" cy="65" r="55" stroke-dasharray="345.4" stroke-dashoffset="345.4"/>
+      </svg>
+      <div class="score-number" id="score-display">0/25</div>
+    </div>
+    <div class="divider"></div>
+    <div class="results-title" id="results-title">Well done!</div>
+    <div class="results-sub" id="results-sub">Here's a summary of your answers.</div>
+    <div class="review" id="review-list"></div>
+    <button class="restart-btn" onclick="restart()">Try Again ↺</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+
+// ── 1. TOPIC SENTENCE — Opinion (social media age limits) ─────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this opinion paragraph.",
+  body:"First, research consistently shows that excessive social media use is linked to higher rates of anxiety, depression, and low self-esteem among teenagers. In addition, cyberbullying — which is far more widespread online than in face-to-face settings — poses a serious threat to young people's mental safety and wellbeing. Furthermore, most teenagers are unaware of the privacy risks involved in sharing personal information online, making them easy targets for data misuse. For these reasons, social media companies have a responsibility to protect young users by enforcing a minimum age requirement.",
+  options:[
+    {text:"Millions of teenagers around the world use social media platforms such as Instagram and TikTok every day.", correct:false},
+    {text:"I believe that social media platforms should introduce a strict minimum age limit for new users.", correct:true},
+    {text:"There are several reasons why social media can have a negative impact on young people.", correct:false},
+    {text:"Social media and young people have always had a complicated and difficult relationship.", correct:false},
+  ],
+  hints:[
+    "This is a factual observation about usage numbers — it doesn't state any opinion or position. An opinion topic sentence must use language like <em>I believe, In my opinion, I think that</em> and take a clear stance.",
+    null,
+    "This sounds like the opening of a <em>cause paragraph</em> — it signals you'll explain reasons, not argue a position. The paragraph is trying to persuade the reader to agree with a view, not just list causes.",
+    "This is too vague — <em>'complicated and difficult'</em> gives no clear controlling idea. The reader has no idea what specific argument the paragraph will make.",
+  ],
+  explanation:"Option B is correct. <em>'I believe that'</em> clearly signals an opinion, and <em>'strict minimum age limit'</em> is a precise, arguable claim. The three supporting sentences then each give a specific reason to support this view: mental health, cyberbullying, and privacy risks."
+},
+
+// ── 2. TOPIC SENTENCE — Cause (podcast popularity) ────────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this cause paragraph.",
+  body:"One reason is the convenience they offer — podcasts can be listened to while commuting, exercising, or doing household chores, fitting easily into a busy daily routine. Another cause is the remarkable variety of content available, covering everything from true crime and history to science and language learning, meaning there is something for virtually everyone. Podcasts are also free or very cheap to access, making them a genuinely affordable alternative to paid media subscriptions. Finally, many listeners feel a strong sense of connection with podcast hosts, whose conversational style feels personal and engaging in a way that traditional broadcast media rarely achieves.",
+  options:[
+    {text:"Podcasts have become one of the most popular forms of media in the world today.", correct:false},
+    {text:"Listening to podcasts has many positive effects on people's knowledge and daily wellbeing.", correct:false},
+    {text:"There are several reasons why podcasts have become so popular among modern listeners.", correct:true},
+    {text:"Podcasts are better than traditional radio because they are more flexible and personal.", correct:false},
+  ],
+  hints:[
+    "This states a general fact about podcasts' popularity but gives no signal that the paragraph will explain <em>why</em>. A cause topic sentence needs words like <em>reasons, causes</em>, or <em>factors</em>.",
+    "Watch out — <em>'positive effects'</em> is an <strong>effect</strong> signal, not a cause signal. But the supporting sentences explain <em>why</em> podcasts are popular, not <em>what they do to people</em>. Match the topic sentence to what follows.",
+    null,
+    "This is an opinion sentence that compares podcasts to radio — but the paragraph makes no comparison. The paragraph explains causes of popularity, not superiority over other media.",
+  ],
+  explanation:"Option C is correct. <em>'Several reasons why'</em> clearly signals a cause paragraph, and the controlling idea (popularity of podcasts) matches all four supporting sentences that follow, each introduced with cause language: <em>one reason, another cause, also, finally</em>."
+},
+
+// ── 3. TOPIC SENTENCE — Effect (early school start times) ─────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this effect paragraph.",
+  body:"First of all, most teenagers who start school before 8 o'clock arrive already exhausted, having had fewer than the recommended eight hours of sleep their developing bodies need. As a result, poor concentration in morning classes leads to lower academic performance and reduced ability to retain new information. Furthermore, chronic tiredness has a direct negative impact on students' emotional wellbeing — tired teenagers are more likely to experience mood swings, irritability, and feelings of hopelessness. Finally, early start times leave students with little or no time for breakfast or morning exercise, both of which are essential for physical health and mental readiness.",
+  options:[
+    {text:"In my opinion, secondary schools should not begin lessons before nine o'clock in the morning.", correct:false},
+    {text:"There are many reasons why schools around the world start so early in the morning.", correct:false},
+    {text:"Starting school too early in the morning has several serious negative effects on students.", correct:true},
+    {text:"Many schools around the world require students to arrive before eight o'clock in the morning.", correct:false},
+  ],
+  hints:[
+    "This is a clear opinion sentence — it says what <em>should</em> happen. But the paragraph doesn't argue a position — it neutrally describes consequences. Don't confuse opinion paragraphs with effect paragraphs.",
+    "This signals a <em>cause paragraph</em> — <em>'reasons why schools start early'</em> would introduce explanations for early start times. But the paragraph describes what early start times <em>do to students</em>, not why schools choose them.",
+    null,
+    "This is a factual description of current practice — it has no controlling idea and doesn't signal what the paragraph will discuss. A strong topic sentence must tell the reader what the paragraph will focus on.",
+  ],
+  explanation:"Option C is correct. <em>'Several serious negative effects'</em> clearly signals an effect paragraph. The controlling idea (early start times → harm to students) is then developed through four consequences: sleep deprivation, poor academic performance, emotional impact, and no time for breakfast or exercise."
+},
+
+// ── 4. TOPIC SENTENCE — Similarity (books vs films) ──────────
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this similarity paragraph.",
+  body:"Both books and films tell stories that allow audiences to experience different lives, travel to distant places, and feel emotions they might not encounter in their own everyday lives. Similarly, both require a degree of active imagination — readers picture scenes and characters in their minds, while viewers interpret meaning, mood, and subtext from the visuals they see on screen. In the same way, both can educate as well as entertain, covering subjects that range from history and science to personal relationships and social justice. Furthermore, both books and films have the power to create deep emotional connections between audiences and the characters whose journeys they follow.",
+  options:[
+    {text:"Books and films are two of the most popular and widely available forms of entertainment in the world.", correct:false},
+    {text:"Books and films are very different from each other in format, cost, and the experience they offer.", correct:false},
+    {text:"Despite being very different media, books and films share several important and surprising qualities.", correct:true},
+    {text:"In my opinion, reading books is a far more valuable and enriching experience than watching films.", correct:false},
+  ],
+  hints:[
+    "This is a general, vague fact about popularity — it doesn't signal that the paragraph will focus on <em>how books and films are alike</em>. A similarity topic sentence must clearly indicate that two things will be compared as similar.",
+    "This signals a <em>contrast</em> paragraph — <em>'very different'</em> sets up differences. But every supporting sentence in this paragraph uses similarity language: <em>both, similarly, in the same way</em>.",
+    null,
+    "This is a personal opinion that argues books are <em>better</em> than films — a different purpose entirely. The paragraph treats both equally, focusing on what they share rather than ranking them.",
+  ],
+  explanation:"Option C is correct. The phrase <em>'share several important and surprising qualities'</em> clearly signals a similarities paragraph, and the opening concession (<em>'despite being very different media'</em>) adds sophistication by acknowledging the contrast before pivoting to similarities. All four supporting sentences then develop a specific shared quality."
+},
+
+// ── 5. TOPIC SENTENCE — Contrast (fast fashion vs sustainable) ─
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this contrast paragraph.",
+  body:"Fast fashion items are typically very cheap and accessible, whereas sustainable clothing tends to cost significantly more due to the higher quality materials and ethical production processes involved. Furthermore, fast fashion garments are often designed to be worn only a handful of times before falling apart, while sustainable pieces are made to last for years — or even decades. In addition, the environmental impact of the two industries could not be more different: fast fashion is one of the world's biggest polluters, whereas sustainable brands work to minimise waste, carbon emissions, and water usage. Finally, fast fashion relies heavily on poorly paid labour in developing countries, while sustainable brands prioritise fair wages and safe working conditions.",
+  options:[
+    {text:"Both fast fashion and sustainable fashion have millions of loyal customers around the world.", correct:false},
+    {text:"Fast fashion is clearly damaging to the environment and should be replaced by more sustainable alternatives.", correct:false},
+    {text:"Fast fashion and sustainable fashion are different from each other in several important and fundamental ways.", correct:true},
+    {text:"There are several reasons why the fast fashion industry has grown so rapidly over the past two decades.", correct:false},
+  ],
+  hints:[
+    "<em>'Both'</em> is a similarity signal — it presents the two things as sharing something. But every supporting sentence in this paragraph highlights a <em>difference</em> using contrast signal words like <em>whereas</em> and <em>while</em>.",
+    "This is a strong opinion sentence, but the paragraph is a neutral contrast — it describes differences without taking sides or recommending one over the other. Don't confuse a contrast paragraph with an opinion paragraph.",
+    null,
+    "This is a cause topic sentence — it signals the paragraph will explain why fast fashion grew. But the paragraph compares two types of fashion; it never explains the reasons for growth.",
+  ],
+  explanation:"Option C is correct. <em>'Different from each other in several important and fundamental ways'</em> clearly signals a contrast paragraph. Both subjects are introduced, the direction (differences) is stated, and all four supporting sentences then develop one specific contrast each, consistently using <em>whereas</em> and <em>while</em>."
+},
+
+// ── 6. TOPIC SENTENCE — Opinion, harder (fast fashion regulation)
+{
+  type:"mc", typeLabel:"Topic Sentence", typeClass:"tag-ts",
+  instruction:"Choose the best <strong>topic sentence</strong> for this opinion paragraph.",
+  body:"To begin with, the fast fashion industry is responsible for approximately 10% of global carbon emissions and produces 92 million tonnes of textile waste every year — figures that are simply unsustainable for the planet. In addition, the industry's reliance on extremely cheap labour means that millions of garment workers, mostly women in developing countries, earn wages far below the living wage and work in dangerous conditions. Furthermore, fast fashion actively encourages a throwaway culture in which clothing is treated as disposable, undermining the value of craftsmanship and driving overconsumption on a massive scale. For all these reasons, the fast fashion industry cannot continue to operate without serious and urgent consequences for people and the planet.",
+  options:[
+    {text:"Fast fashion brands produce millions of new clothing items every single season of the year.", correct:false},
+    {text:"Fast fashion has both positive and negative effects on consumers, workers, and the environment.", correct:false},
+    {text:"It is clear that the fast fashion industry causes serious harm and must face much stricter regulation.", correct:true},
+    {text:"There are several reasons why fast fashion has become so popular and so widely available globally.", correct:false},
+  ],
+  hints:[
+    "This is a factual description of what fast fashion companies do — it states no opinion and sets no direction for an argument. An opinion topic sentence must take a position and signal what the paragraph will argue.",
+    "This sentence promises to discuss <em>both sides</em> — positives and negatives. But the paragraph presents only negative arguments. If your topic sentence promises balance, your paragraph must deliver balance. They must match.",
+    null,
+    "This is a cause topic sentence — it promises to explain <em>why</em> fast fashion became popular. But the paragraph argues about the <em>harms</em> of fast fashion, not the reasons for its growth. The paragraph's purpose and the topic sentence's promise are completely mismatched.",
+  ],
+  explanation:"Option C is correct. <em>'It is clear that... causes serious harm'</em> is a strong, arguable opinion claim. <em>'Must face much stricter regulation'</em> is the specific policy position the paragraph builds toward. All three supporting sentences then provide evidence (environmental damage, worker exploitation, throwaway culture) to support this claim."
+},
+
+// ── 7. ODD ONE OUT — Opinion (social media age limits) ────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this opinion paragraph about why social media is harmful for young people.",
+  sentences:[
+    {text:"1. Excessive use of social media has been directly linked to higher rates of anxiety, depression, and poor self-image among teenagers.", correct:false, hint:"This is a clear supporting reason: social media harms mental health. It belongs in the paragraph."},
+    {text:"2. Cyberbullying is far more common on social media platforms than in face-to-face environments, creating serious safety risks.", correct:false, hint:"This gives another reason why social media is harmful — cyberbullying. It supports the main argument."},
+    {text:"3. As a result, many young people who have experienced online bullying report feeling isolated, anxious, and reluctant to attend school.", correct:true, hint:"All the other sentences explain <em>why</em> social media is harmful — they give causes or reasons. What is this sentence doing instead?"},
+    {text:"4. Young users frequently share personal data without realising the serious privacy and security risks involved.", correct:false, hint:"This gives a third reason: privacy risks. It supports the paragraph's main idea."},
+    {text:"5. For all these reasons, it is essential that social media platforms take greater responsibility for the safety of young users.", correct:false, hint:"This is a strong concluding sentence that restates the paragraph's overall argument. It belongs here."},
+  ],
+  explanation:"Sentence 3 is the odd one out — but notice how subtle it is. It uses <em>'as a result'</em> and describes a <em>consequence</em> of cyberbullying, not a <em>reason</em> why social media is harmful. This is an <strong>effect sentence in a cause/opinion paragraph</strong>. All other sentences give reasons or arguments; this one accidentally shifts into effect territory."
+},
+
+// ── 8. ODD ONE OUT — Cause (podcast popularity) ───────────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this cause paragraph about why podcasts have become so popular.",
+  sentences:[
+    {text:"1. One reason is their convenience — podcasts can be listened to hands-free during commutes, gym sessions, or household tasks.", correct:false, hint:"This identifies a clear cause of podcast popularity: convenience. It belongs here."},
+    {text:"2. Another cause is the extraordinary variety of content available, ensuring there is a podcast for virtually every interest and hobby.", correct:false, hint:"Variety of content = another cause of popularity. This fits the paragraph well."},
+    {text:"3. Consequently, many traditional radio stations have seen a steady and significant decline in their listener numbers in recent years.", correct:true, hint:"Think about what <em>consequently</em> signals. Is this sentence explaining a <em>cause</em> of podcast popularity, or is it describing something that <em>happened as a result</em> of it?"},
+    {text:"4. Podcasts are also free or extremely cheap to access, making them an affordable alternative to paid media services.", correct:false, hint:"Low cost = another reason people choose podcasts. This supports the main idea."},
+  ],
+  explanation:"Sentence 3 is the odd one out. <em>'Consequently'</em> is an <strong>effect signal word</strong> — radio's decline is a <em>consequence</em> of podcast popularity, not a reason for it. This is an effect sentence placed inside a cause paragraph. The other three sentences all use cause language (<em>one reason, another cause, also</em>) and explain why podcasts became popular."
+},
+
+// ── 9. ODD ONE OUT — Effect (early school start times) ────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this effect paragraph about early school start times.",
+  sentences:[
+    {text:"1. As a result, many students arrive at school already exhausted, having slept far fewer hours than their bodies need.", correct:false, hint:"This is an effect: students arrive tired. <em>As a result</em> marks it clearly as a consequence. It belongs here."},
+    {text:"2. Consequently, poor concentration in early morning lessons leads to weaker academic performance over time.", correct:false, hint:"Academic decline is introduced as a consequence of tiredness. <em>Consequently</em> signals an effect clearly."},
+    {text:"3. Schools start early because of transport logistics, teacher preparation time, and parents' work schedules.", correct:true, hint:"This sentence uses <em>because of</em> and explains <em>why</em> something happens. Does that fit an effect paragraph?"},
+    {text:"4. Therefore, students' emotional wellbeing is negatively affected, with tired teenagers being more prone to mood swings and irritability.", correct:false, hint:"Emotional and mood effects are presented as consequences. <em>Therefore</em> signals an effect. It belongs here."},
+  ],
+  explanation:"Sentence 3 is the odd one out. It uses <em>'because of'</em> and explains the <em>reasons</em> schools start early — it is a <strong>cause sentence inside an effect paragraph</strong>. The three other sentences all describe consequences of early start times using clear effect signal words: <em>as a result, consequently, therefore</em>."
+},
+
+// ── 10. ODD ONE OUT — Similarity (books vs films) ─────────────
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this similarity paragraph about books and films.",
+  sentences:[
+    {text:"1. Both books and films tell compelling stories that allow audiences to experience lives and emotions beyond their own.", correct:false, hint:"This shows a shared quality — storytelling. <em>Both</em> clearly signals similarity. It belongs here."},
+    {text:"2. Similarly, both encourage active engagement from their audiences, whether imagining scenes or interpreting visual storytelling.", correct:false, hint:"This shows another similarity — audience engagement. <em>Similarly</em> confirms it. It belongs."},
+    {text:"3. However, films are generally far more expensive to produce than books are to write and publish.", correct:true, hint:"Focus on the signal word and the content. Does this sentence show how books and films are <em>alike</em>, or something else?"},
+    {text:"4. In the same way, both have the power to educate audiences on topics ranging from history to science to human psychology.", correct:false, hint:"Educational power is a shared quality. <em>In the same way</em> signals similarity. It belongs."},
+  ],
+  explanation:"Sentence 3 is the odd one out. <em>'However'</em> is a <strong>contrast signal word</strong>, and the sentence highlights a <em>difference</em> (production cost). In a similarity paragraph, every sentence must show how the two things are alike. Introducing a contrast — even with a single word like <em>however</em> — breaks the paragraph's unity and confuses the reader."
+},
+
+// ── 11. ODD ONE OUT — Contrast (fast fashion vs sustainable) ──
+{
+  type:"odd", typeLabel:"Odd One Out", typeClass:"tag-ooo",
+  instruction:"Click on the sentence that <strong>does NOT belong</strong> in this contrast paragraph about fast fashion and sustainable fashion.",
+  sentences:[
+    {text:"1. Fast fashion items are typically very affordable, whereas sustainable clothing tends to cost significantly more due to higher-quality materials.", correct:false, hint:"This contrasts price using <em>whereas</em>. It belongs in a contrast paragraph."},
+    {text:"2. Fast fashion garments are designed to last only a few washes, while sustainable pieces are built to endure for years.", correct:false, hint:"This contrasts durability using <em>while</em>. It fits the paragraph."},
+    {text:"3. Both industries rely heavily on digital marketing and social media influencers to reach younger consumers.", correct:true, hint:"Notice the word <em>both</em>. Is this sentence highlighting a difference between the two industries, or something they share?"},
+    {text:"4. The environmental impact of fast fashion is enormous, whereas sustainable brands actively work to reduce waste and carbon emissions.", correct:false, hint:"This contrasts environmental impact using <em>whereas</em>. It belongs in this contrast paragraph."},
+  ],
+  explanation:"Sentence 3 is the odd one out. It uses <em>'both'</em> to describe something the two industries <em>share</em> — a similarity in their marketing approach. In a contrast paragraph, every sentence must highlight a difference. A similarity sentence — even a true one — disrupts the paragraph's unity and contradicts its purpose."
+},
+
+// ── 12. CONCLUDING SENTENCE — Opinion (social media age limits)
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  challenge:true,
+  instruction:"Choose the best <strong>concluding sentence</strong> for this opinion paragraph.<br><br><em>All four options begin with the same phrase. Read each one carefully and think about the <strong>content</strong>, not the signal word.</em>",
+  body:"I believe that social media platforms should introduce a strict minimum age limit for new users. First, excessive social media use is directly linked to higher rates of anxiety, depression, and low self-esteem among teenagers. In addition, cyberbullying — which thrives on anonymous online platforms — poses a serious and growing threat to young people's mental safety. Furthermore, most young users are unaware of the serious privacy risks involved in sharing personal information online, leaving them vulnerable to data misuse and exploitation.",
+  options:[
+    {text:"In conclusion, social media platforms are used by hundreds of millions of teenagers around the world every single day.", correct:false},
+    {text:"In conclusion, although social media has clear benefits for adults, the risks to young people's mental health, safety, and privacy make a minimum age limit both reasonable and necessary.", correct:true},
+    {text:"In conclusion, there are many complex reasons why social media platforms have grown so quickly in recent years.", correct:false},
+    {text:"In conclusion, social media age limits are similar to restrictions already in place for alcohol, gambling, and cinema.", correct:false},
+  ],
+  hints:[
+    "This restates a background fact — it doesn't summarise the <em>argument</em> the paragraph made. A concluding sentence must reflect what was actually argued, not just describe a general situation.",
+    null,
+    "This sounds like the opening of a <em>cause paragraph</em> about social media growth — a completely different topic from what was argued. Never shift the paragraph's focus in the final sentence.",
+    "This introduces a new comparison (alcohol, gambling, cinema) that was never mentioned in the paragraph. A concluding sentence must only refer to what was already discussed.",
+  ],
+  explanation:"Option B is correct. It restates the writer's position (<em>'a minimum age limit... reasonable and necessary'</em>) and connects back to all three supporting arguments: mental health, safety, and privacy. The brief concession (<em>'although social media has clear benefits for adults'</em>) adds sophistication without introducing genuinely new content."
+},
+
+// ── 13. CONCLUDING SENTENCE — Cause (podcast popularity) ──────
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  challenge:true,
+  instruction:"Choose the best <strong>concluding sentence</strong> for this cause paragraph.<br><br><em>All four options begin with the same phrase. Think about <strong>content accuracy</strong> — which one truly summarises what was discussed?</em>",
+  body:"There are several reasons why podcasts have become so popular among modern listeners. One reason is the convenience they offer — podcasts can be listened to while commuting, exercising, or doing household chores. Another cause is the remarkable variety of content available, covering everything from true crime to language learning. Podcasts are also free or very cheap to access, making them an affordable alternative to paid media. Finally, many listeners feel a strong personal connection with podcast hosts, whose conversational style feels engaging and authentic.",
+  options:[
+    {text:"To sum up, the convenience, variety, affordability, and personal connection that podcasts offer explain why they have become such a dominant form of modern media.", correct:true},
+    {text:"To sum up, podcasts are more popular than radio and television among listeners under the age of thirty-five.", correct:false},
+    {text:"To sum up, listening to podcasts regularly can significantly improve people's general knowledge, vocabulary, and wellbeing.", correct:false},
+    {text:"To sum up, podcasts first became popular in the early 2000s and have continued to grow in audience size ever since.", correct:false},
+  ],
+  hints:[
+    null,
+    "This introduces a new comparison with radio and television — something never discussed in the paragraph. A concluding sentence cannot bring in new information or comparisons.",
+    "This describes the <em>effects</em> of listening to podcasts — improved knowledge and wellbeing. But the paragraph explained <em>why</em> podcasts are popular, not what they do to listeners. Don't shift from cause to effect in the final sentence.",
+    "This introduces new historical information about when podcasts first appeared. The paragraph never discussed the history of podcasting.",
+  ],
+  explanation:"Option A is correct. It accurately summarises all four causes discussed: convenience, variety, affordability, and personal connection. It uses <em>'explain why'</em> to reinforce that this was a cause paragraph, and it restates the main idea (<em>dominant form of modern media</em>) without adding any new information."
+},
+
+// ── 14. CONCLUDING SENTENCE — Effect (early school start times)
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  challenge:true,
+  instruction:"Choose the best <strong>concluding sentence</strong> for this effect paragraph.<br><br><em>All four options begin with the same phrase. One correctly summarises all the effects discussed. The others have subtle problems — find them.</em>",
+  body:"Starting school too early in the morning has several serious negative effects on students. First, most teenagers arrive exhausted, having had far less sleep than their bodies require. As a result, poor concentration in morning classes leads to weaker academic performance over time. Furthermore, chronic tiredness negatively affects students' emotional wellbeing, making them more prone to irritability and mood swings. Finally, early start times leave students with no time for breakfast or exercise, both of which are essential for physical health.",
+  options:[
+    {text:"Overall, starting school too early is harmful mainly because students do not get enough sleep at night.", correct:false},
+    {text:"Overall, the negative effects of early school start times — on sleep, academic performance, emotional health, and physical wellbeing — make a compelling case for rethinking current school schedules.", correct:true},
+    {text:"Overall, these problems are caused by the fact that schools prioritise administrative convenience over students' health and learning needs.", correct:false},
+    {text:"Overall, students in countries with later school start times consistently outperform those who begin school earlier in the morning.", correct:false},
+  ],
+  hints:[
+    "This focuses only on sleep — one of four effects discussed. A concluding sentence must reflect <em>all</em> the main points of the paragraph, not just one. This is too narrow.",
+    null,
+    "This introduces a <em>cause</em> — why schools make this decision. But the paragraph describes <em>effects</em>. Shifting from effects to causes in the final sentence changes the paragraph's purpose entirely.",
+    "This introduces new comparative data about other countries — something never discussed. A concluding sentence can never add new facts, statistics, or comparisons.",
+  ],
+  explanation:"Option B is correct. It accurately references all four effects covered: sleep deprivation, academic performance, emotional health, and physical wellbeing. The phrase <em>'make a compelling case for rethinking'</em> provides a natural forward-looking close without introducing genuinely new content."
+},
+
+// ── 15. CONCLUDING SENTENCE — Similarity (books vs films) ─────
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  challenge:true,
+  instruction:"Choose the best <strong>concluding sentence</strong> for this similarity paragraph.<br><br><em>All four options begin with 'To sum up'. Focus entirely on whether the content accurately reflects what was discussed.</em>",
+  body:"Despite being very different media, books and films share several important and surprising qualities. Both tell stories that allow audiences to experience lives and emotions beyond their own. Similarly, both require active imagination — readers picture scenes in their minds, while viewers interpret meaning from what they see. In the same way, both can educate as well as entertain, covering subjects from history to human psychology. Furthermore, both have the power to create deep emotional connections between audiences and the characters whose journeys they follow.",
+  options:[
+    {text:"To sum up, books and films are both popular and widely available forms of entertainment that have existed for over a century.", correct:false},
+    {text:"To sum up, while books and films differ in many ways, they are fundamentally alike in their ability to tell stories, engage the imagination, educate, and create emotional bonds with their audiences.", correct:true},
+    {text:"To sum up, books and films differ from each other in format, production cost, and the type of experience they provide to their audiences.", correct:false},
+    {text:"To sum up, most people today prefer watching films to reading books, as films require significantly less time and mental effort.", correct:false},
+  ],
+  hints:[
+    "This is vague and generic — it just says they are popular and old. It doesn't summarise the <em>specific similarities</em> that were discussed: storytelling, imagination, education, emotional connection.",
+    null,
+    "This summarises <em>differences</em> — but the paragraph was entirely about similarities. Using a concluding sentence that focuses on contrast at the end of a similarity paragraph contradicts the paragraph's purpose.",
+    "This introduces a new and unsupported opinion claim (most people prefer films) that was never discussed. It also implies one is better than the other, which the paragraph never argued.",
+  ],
+  explanation:"Option B is correct. The opening concession (<em>'while books and films differ in many ways'</em>) acknowledges the contrast without becoming a contrast paragraph. It then accurately summarises all four similarities: storytelling, imagination, education, and emotional connection — in new words, with no new information added."
+},
+
+// ── 16. CONCLUDING SENTENCE — Contrast (fast fashion vs sustainable)
+{
+  type:"mc", typeLabel:"Concluding Sentence", typeClass:"tag-cs",
+  challenge:true,
+  instruction:"Choose the best <strong>concluding sentence</strong> for this contrast paragraph.<br><br><em>All four options begin with 'In conclusion'. Which one best closes the paragraph without adding new ideas or changing direction?</em>",
+  body:"Fast fashion and sustainable fashion are different from each other in several important and fundamental ways. Fast fashion items are typically very cheap and accessible, whereas sustainable clothing costs significantly more due to ethical production. Fast fashion garments are designed to last only a few washes, while sustainable pieces are built to endure for years. The environmental impact of the two industries could not be more different: fast fashion is one of the world's biggest polluters, whereas sustainable brands actively minimise waste and emissions. Finally, fast fashion relies on poorly paid labour, while sustainable brands prioritise fair wages and safe conditions.",
+  options:[
+    {text:"In conclusion, fast fashion and sustainable fashion both have advantages and should be selected based on individual budget and personal values.", correct:false},
+    {text:"In conclusion, fast fashion is clearly the worse option and should be banned immediately by governments worldwide.", correct:false},
+    {text:"In conclusion, fast fashion and sustainable fashion differ significantly in price, durability, environmental impact, and the ethical standards of their production processes.", correct:true},
+    {text:"In conclusion, the fast fashion industry grew rapidly due to globalisation, cheap overseas manufacturing, and a cultural shift towards disposable consumer goods.", correct:false},
+  ],
+  hints:[
+    "This introduces the idea of personal choice based on 'individual budget and values' — a new angle never discussed in the paragraph. It also implies both are equally valid options, which the paragraph's factual contrasts do not support.",
+    "This takes a strong opinion stance (fast fashion should be banned) that the paragraph never argued — it was a neutral, factual contrast, not an opinion piece. Don't turn a contrast paragraph into an opinion in the final line.",
+    null,
+    "This introduces the <em>causes</em> of fast fashion's growth — globalisation, manufacturing, cultural shift. The paragraph described differences, not causes. This completely changes the paragraph's direction in the final sentence.",
+  ],
+  explanation:"Option C is correct. It accurately lists all four contrasts covered: price, durability, environmental impact, and ethical standards. <em>'In conclusion'</em> signals closure, and the sentence stays strictly within what was discussed — no new ideas, no opinions, no causes introduced."
+},
+
+// ── 17. SIGNAL WORDS — Cause ──────────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses a <strong>cause signal word</strong>.",
+  options:[
+    {text:"She started a podcast about sustainable fashion; as a result, she gained thousands of loyal followers.", correct:false},
+    {text:"Reading books and watching films are both enjoyable ways to spend a free evening.", correct:false},
+    {text:"Many teenagers feel anxious and insecure due to the constant pressure to look perfect on social media.", correct:true},
+    {text:"Fast fashion is affordable, whereas sustainable clothing is often priced out of reach for many consumers.", correct:false},
+  ],
+  hints:[
+    "<em>As a result</em> is an <strong>effect</strong> signal word — it introduces what happened <em>because of</em> something. We need a word that introduces the <em>reason</em> something happens.",
+    "<em>Both</em> is a <strong>similarity</strong> signal word — it shows a shared quality. It has no cause-effect function.",
+    null,
+    "<em>Whereas</em> is a <strong>contrast</strong> signal word — it introduces a difference. It explains no cause.",
+  ],
+  explanation:"<em>Due to</em> is a cause signal word — it introduces the reason why teenagers feel anxious: the pressure of social media. Other cause signal words: <em>because, since, because of, owing to</em>. Note: <em>due to</em> is followed by a noun phrase, while <em>because</em> is followed by a full clause."
+},
+
+// ── 18. SIGNAL WORDS — Effect ─────────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses an <strong>effect signal word</strong>.",
+  options:[
+    {text:"She stopped buying fast fashion since she learned about its environmental damage.", correct:false},
+    {text:"He started listening to podcasts; consequently, he became significantly more informed about current events.", correct:true},
+    {text:"Just like books, films can inspire deep emotional responses and lasting personal change.", correct:false},
+    {text:"Although early school start times are traditional, there is growing evidence they harm students.", correct:false},
+  ],
+  hints:[
+    "<em>Since</em> here introduces a <strong>cause</strong> — the reason she stopped buying fast fashion. We need a word that introduces what <em>happened as a result</em> of something.",
+    null,
+    "<em>Just like</em> is a <strong>similarity</strong> signal — it introduces a shared quality. It has no cause-effect function.",
+    "<em>Although</em> is a <strong>contrast</strong> signal word — it links two opposing ideas. It introduces no result or consequence.",
+  ],
+  explanation:"<em>Consequently</em> is an effect signal word — it introduces the result of starting to listen to podcasts: becoming better informed. Other effect signal words: <em>therefore, thus, as a result, hence, so</em>. Note: <em>consequently</em> often implies a more significant or surprising result than <em>so</em>."
+},
+
+// ── 19. SIGNAL WORDS — Similarity ────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses a <strong>similarity signal word</strong>.",
+  options:[
+    {text:"He reads every night before bed; therefore, his vocabulary and writing have improved significantly.", correct:false},
+    {text:"Many students feel exhausted in the morning because school starts far too early.", correct:false},
+    {text:"Fast fashion harms the environment. In the same way, single-use plastics contribute to serious ecological damage.", correct:true},
+    {text:"Podcasts are informal and personal, while traditional radio tends to be more structured and scripted.", correct:false},
+  ],
+  hints:[
+    "<em>Therefore</em> is an <strong>effect</strong> signal word — it introduces a consequence. We need a word that shows two things are <em>alike</em>.",
+    "<em>Because</em> is a <strong>cause</strong> signal word — it introduces a reason. It has no similarity function.",
+    null,
+    "<em>While</em> here is a <strong>contrast</strong> signal word — it introduces a difference between podcasts and radio. It doesn't show similarity.",
+  ],
+  explanation:"<em>In the same way</em> is a similarity signal word — it shows that fast fashion and single-use plastics share the same quality (environmental harm). Other similarity signal words: <em>similarly, likewise, just like, both, also, too, in a similar manner</em>."
+},
+
+// ── 20. SIGNAL WORDS — Contrast ──────────────────────────────
+{
+  type:"mc", typeLabel:"Signal Words", typeClass:"tag-sw",
+  instruction:"Choose the sentence that correctly uses a <strong>contrast signal word</strong>.",
+  options:[
+    {text:"She gave up fast fashion owing to its devastating environmental and social impact.", correct:false},
+    {text:"Both podcasts and audiobooks deliver spoken audio content that listeners can enjoy on the go.", correct:false},
+    {text:"He woke up earlier every day; as a result, he felt more productive and less rushed before school.", correct:false},
+    {text:"Books demand active imagination from the reader, whereas films provide a fully constructed visual world.", correct:true},
+  ],
+  hints:[
+    "<em>Owing to</em> is a <strong>cause</strong> signal word — it introduces the reason she made a change. It explains no contrast.",
+    "<em>Both</em> is a <strong>similarity</strong> signal word. It shows what two things share — the opposite of contrast.",
+    "<em>As a result</em> is an <strong>effect</strong> signal word. It introduces a consequence of waking up earlier.",
+    null,
+  ],
+  explanation:"<em>Whereas</em> is a contrast signal word — it highlights a clear difference between books and films in a single sentence. Books require imagination; films provide it visually — a direct, structured contrast. Other contrast signal words: <em>however, although, while, on the other hand, in contrast, but, even though, unlike</em>."
+},
+
+// ── 21. PARAGRAPH TYPE — Effect (fast fashion) ───────────────
+{
+  type:"mc", typeLabel:"Paragraph Type", typeClass:"tag-ps",
+  instruction:"Read the paragraph and identify its <strong>type</strong>.",
+  body:"The fast fashion industry has several serious consequences for the environment and society. First of all, the production of cheap clothing generates enormous amounts of textile waste — an estimated 92 million tonnes per year — much of which ends up in landfill. Furthermore, the dyeing and treatment of fabrics releases toxic chemicals into rivers and waterways, causing severe water pollution in manufacturing regions. In addition, fast fashion encourages a throwaway culture in which people buy far more clothes than they need and discard them after only a few uses. Finally, workers in fast fashion factories, particularly in developing countries, often suffer poor wages, unsafe conditions, and long working hours as a direct result of price pressure from global brands.",
+  options:[
+    {text:"🔍 Cause paragraph", correct:false},
+    {text:"💬 Opinion paragraph", correct:false},
+    {text:"📖 Effect paragraph", correct:true},
+    {text:"⚖️ Contrast paragraph", correct:false},
+  ],
+  hints:[
+    "A cause paragraph explains <em>why</em> something happens — it answers the question 'What causes this?' This paragraph doesn't explain why fast fashion exists; it describes what the industry <em>does to the world</em>.",
+    "An opinion paragraph states the writer's personal position, usually with phrases like <em>I believe</em> or <em>In my opinion</em>. Although the content is critical, the paragraph presents consequences factually and neutrally — it doesn't argue for a specific action.",
+    null,
+    "A contrast paragraph compares two subjects to show their differences. This paragraph focuses entirely on one subject (fast fashion) — there is nothing being compared to anything else.",
+  ],
+  explanation:"This is an <strong>effect paragraph</strong>. Every supporting sentence describes a consequence of the fast fashion industry: textile waste, water pollution, throwaway culture, and poor worker conditions. The topic sentence signals this with <em>'serious consequences'</em>, and effect language appears throughout: <em>generates, releases, encourages, suffer as a direct result of</em>."
+},
+
+// ── 22. PARAGRAPH TYPE — Opinion (podcasts) ──────────────────
+{
+  type:"mc", typeLabel:"Paragraph Type", typeClass:"tag-ps",
+  instruction:"Read the paragraph and identify its <strong>type</strong>.",
+  body:"I believe that everyone should make time to listen to podcasts regularly. To begin with, podcasts expose listeners to a huge range of perspectives, ideas, and expertise that they would be unlikely to encounter in their everyday lives, making them an excellent tool for continuous self-education. In addition, listening to podcasts during otherwise unproductive time — such as commuting or washing up — allows people to learn without taking extra time out of their busy schedules. Furthermore, a wide variety of podcasts focus specifically on mental health, mindfulness, and personal development, making them a genuinely accessible resource for people who want to improve their wellbeing. For all these reasons, I strongly encourage everyone to give podcasts a regular place in their daily routine.",
+  options:[
+    {text:"🔍 Cause paragraph", correct:false},
+    {text:"💬 Opinion paragraph", correct:true},
+    {text:"📖 Effect paragraph", correct:false},
+    {text:"🤝 Similarity paragraph", correct:false},
+  ],
+  hints:[
+    "A cause paragraph explains why something happens, using neutral language. This paragraph doesn't explain why podcasts exist or became popular — it argues that people <em>should</em> listen to them. Notice the persuasive language.",
+    null,
+    "An effect paragraph describes consequences neutrally. Although this paragraph mentions benefits, it does so as part of a persuasive argument with a clear personal stance — not as a neutral list of outcomes.",
+    "A similarity paragraph compares two things to show how they are alike. There is only one subject here: podcasts. Nothing is being compared.",
+  ],
+  explanation:"This is an <strong>opinion paragraph</strong>. The opening (<em>'I believe that everyone should'</em>) and closing (<em>'I strongly encourage'</em>) make the writer's personal position unmistakable. The supporting sentences give reasons to support the argument — their purpose is to <em>persuade</em>, not to neutrally describe effects or explain causes."
+},
+
+// ── 23. PARAGRAPH TYPE — Contrast (books vs films) ───────────
+{
+  type:"mc", typeLabel:"Paragraph Type", typeClass:"tag-ps",
+  instruction:"Read the paragraph and identify its <strong>type</strong>.",
+  body:"Books and films offer their audiences very different experiences. When reading a book, the reader must actively construct images, voices, and settings using their imagination, while a film delivers a fully designed visual and auditory world for the viewer to receive passively. In addition, books allow readers to move at their own pace — pausing to reflect or re-reading a difficult passage — whereas films unfold at a fixed pace controlled by the director. Furthermore, books can explore a character's inner thoughts and feelings in great depth, while films tend to rely on dialogue and action to convey the same information. In conclusion, although both are powerful storytelling media, books and films engage their audiences in fundamentally different ways.",
+  options:[
+    {text:"🤝 Similarity paragraph", correct:false},
+    {text:"📖 Effect paragraph", correct:false},
+    {text:"⚖️ Contrast paragraph", correct:true},
+    {text:"💬 Opinion paragraph", correct:false},
+  ],
+  hints:[
+    "A similarity paragraph focuses on how two things are <em>alike</em> using words like <em>both, similarly, likewise</em>. This paragraph uses <em>while, whereas, while</em> — all contrast signal words. Every sentence highlights a difference.",
+    "An effect paragraph describes what happens as a result of something. This paragraph doesn't describe any consequences — it systematically compares two experiences.",
+    null,
+    "An opinion paragraph argues a personal position. Although the concluding sentence mentions both are 'powerful', the paragraph never takes a side or recommends one over the other — it is a neutral comparison.",
+  ],
+  explanation:"This is a <strong>contrast paragraph</strong>. Three supporting sentences each highlight a specific difference using contrast signal words: <em>while, whereas, while</em>. The topic sentence signals contrast with <em>'very different experiences'</em>, and the concluding sentence reinforces it: <em>'fundamentally different ways'</em>."
+},
+
+// ── 24. FACT vs. OPINION ─────────────────────────────────────
+{
+  type:"mc", typeLabel:"Fact or Opinion?", typeClass:"tag-fo",
+  instruction:"Which of these sentences is an <strong>opinion</strong>?",
+  options:[
+    {text:"The global fast fashion industry generates approximately 92 million tonnes of textile waste every year.", correct:false},
+    {text:"Teenagers spend an average of four to six hours per day using social media platforms.", correct:false},
+    {text:"Sustainable fashion is the most ethical and responsible choice any consumer can make.", correct:true},
+    {text:"The first podcast was created and published online in 2004.", correct:false},
+  ],
+  hints:[
+    "This is a specific, measurable statistic that can be verified through industry reports. It describes a quantity — a fact that doesn't depend on personal belief.",
+    "This is a statistical estimate based on research data. Although it may vary by study or age group, it is still a factual, measurable claim — not a personal judgement.",
+    null,
+    "This is a specific, verifiable historical claim. The year and event can be confirmed through records. It is a fact, not a matter of personal belief.",
+  ],
+  explanation:"Option C is an opinion. <em>'The most ethical and responsible choice'</em> is a subjective judgement — not everyone would agree. Some people might argue that buying second-hand, repairing clothing, or simply buying less is more ethical than purchasing expensive sustainable brands. Key rule: if the statement makes a value judgement that reasonable people can debate, it is an opinion."
+},
+
+// ── 25. FACT vs. OPINION — which makes the best opinion TS ────
+{
+  type:"mc", typeLabel:"Fact or Opinion?", typeClass:"tag-fo",
+  instruction:"Which sentence would make the strongest <strong>topic sentence for an opinion paragraph</strong> about early school start times?",
+  options:[
+    {text:"In many countries, secondary schools require students to arrive between 7:30 and 8:30 in the morning.", correct:false},
+    {text:"Research consistently shows that teenagers need between eight and ten hours of sleep per night.", correct:false},
+    {text:"School start times vary considerably from one country and education system to another.", correct:false},
+    {text:"In my view, secondary schools should not begin lessons before 9 o'clock, as earlier start times seriously harm students' health and learning.", correct:true},
+  ],
+  hints:[
+    "This is a factual description of current practice in many schools. It takes no position and gives no controlling idea for an argument. A topic sentence for an opinion paragraph must state a debatable claim.",
+    "This is a factual statistic from scientific research. Although it might support an opinion paragraph, it is not itself an opinion — it doesn't tell the reader what the writer <em>believes should happen</em>.",
+    "This is a neutral, descriptive observation about global variation. It takes no stance and gives no direction for an argument.",
+    null,
+  ],
+  explanation:"Option D is correct. It contains all the elements of a strong opinion topic sentence: a clear signal phrase (<em>'In my view'</em>), a specific, arguable claim (<em>'should not begin before 9 o'clock'</em>), and even a brief reason (<em>'as earlier start times seriously harm students'</em>) that previews the paragraph's argument. Options A, B, and C are all factual statements — none of them commit to a position."
+},
+
+]; // end questions
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let current = 0, score = 0;
+let userAnswers = [];
+let hintedThisQ = false;
+
+function renderQuestion() {
+  hintedThisQ = false;
+  const q = questions[current];
+  const area = document.getElementById("quiz-area");
+  area.innerHTML = "";
+
+  document.getElementById("prog-label").textContent = `Question ${current+1} of ${questions.length}`;
+  document.getElementById("score-label").textContent = `Score: ${score}`;
+  document.getElementById("prog-fill").style.width = `${((current+1)/questions.length)*100}%`;
+
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const challengeNote = q.challenge
+    ? `<div class="challenge-note">⚠️ All options begin with the same signal phrase — focus on the content.</div>`
+    : "";
+
+  card.innerHTML = `
+    <div class="card-tag">
+      <span class="tag-pill ${q.typeClass}">${q.typeLabel}</span>
+    </div>
+    <div class="card-body">
+      <p class="question-text">${q.instruction}</p>
+      ${challengeNote}
+      ${q.body ? `<div class="para-box">${q.body}</div>` : ""}
+      <div id="interaction-area"></div>
+      <div class="hint-box" id="hint-box"></div>
+      <div class="show-why-wrap" id="show-why-wrap">
+        <button class="show-why-btn" id="show-why-btn">Show me why →</button>
+      </div>
+      <div class="feedback" id="feedback-box"></div>
+    </div>
+  `;
+  area.appendChild(card);
+
+  const nextWrap = document.createElement("div");
+  nextWrap.className = "next-wrap";
+  nextWrap.id = "next-wrap";
+  const isLast = current === questions.length - 1;
+  nextWrap.innerHTML = `<button class="next-btn" onclick="${isLast ? 'showResults()' : 'nextQuestion()'}">${isLast ? "See Results →" : "Next Question →"}</button>`;
+  card.appendChild(nextWrap);
+
+  if (q.type === "odd") buildOdd(q);
+  else buildMC(q);
+}
+
+function buildMC(q) {
+  const ia = document.getElementById("interaction-area");
+  const letters = ["A","B","C","D"];
+  const div = document.createElement("div");
+  div.className = "options";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn";
+    btn.dataset.idx = i;
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt.text}</span>`;
+    btn.onclick = () => handleMC(q, i, div);
+    div.appendChild(btn);
+  });
+  ia.appendChild(div);
+}
+
+function handleMC(q, idx, container) {
+  const btns = container.querySelectorAll(".option-btn");
+  const isCorrect = q.options[idx].correct;
+  if (isCorrect) {
+    btns.forEach(b => b.disabled = true);
+    btns[idx].classList.add("state-correct");
+    showFeedback(true, q.explanation);
+    const firstTry = !hintedThisQ;
+    if (firstTry) score++;
+    userAnswers.push({correct:true, firstTry, label: q.options[idx].text.substring(0,65)});
+    document.getElementById("score-label").textContent = `Score: ${score}`;
+    document.getElementById("next-wrap").classList.add("show");
+  } else {
+    hintedThisQ = true;
+    btns[idx].classList.add("state-hinted");
+    btns[idx].disabled = true;
+    const hintBox = document.getElementById("hint-box");
+    hintBox.innerHTML = `<div class="hint-label">💡 Hint</div>${q.hints[idx]}`;
+    hintBox.classList.add("show");
+    const showWrap = document.getElementById("show-why-wrap");
+    showWrap.classList.add("show");
+    document.getElementById("show-why-btn").onclick = () => revealMC(q, idx, container);
+  }
+}
+
+function revealMC(q, clickedIdx, container) {
+  const btns = container.querySelectorAll(".option-btn");
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (q.options[i].correct) b.classList.add("state-reveal-correct");
+    else if (i === clickedIdx) b.classList.add("state-wrong");
+  });
+  document.getElementById("show-why-wrap").classList.remove("show");
+  showFeedback(false, q.explanation);
+  userAnswers.push({correct:false, firstTry:false, label: q.options[clickedIdx].text.substring(0,65)});
+  document.getElementById("next-wrap").classList.add("show");
+}
+
+function buildOdd(q) {
+  const ia = document.getElementById("interaction-area");
+  const div = document.createElement("div");
+  div.className = "sentences";
+  q.sentences.forEach((s, i) => {
+    const btn = document.createElement("button");
+    btn.className = "sentence-btn";
+    btn.innerHTML = s.text;
+    btn.onclick = () => handleOdd(q, i, div);
+    div.appendChild(btn);
+  });
+  ia.appendChild(div);
+}
+
+function handleOdd(q, idx, container) {
+  const btns = container.querySelectorAll(".sentence-btn");
+  const isCorrect = q.sentences[idx].correct;
+  if (isCorrect) {
+    btns.forEach(b => b.disabled = true);
+    btns[idx].classList.add("state-correct");
+    showFeedback(true, q.explanation);
+    const firstTry = !hintedThisQ;
+    if (firstTry) score++;
+    userAnswers.push({correct:true, firstTry, label: q.sentences[idx].text.substring(0,65)});
+    document.getElementById("score-label").textContent = `Score: ${score}`;
+    document.getElementById("next-wrap").classList.add("show");
+  } else {
+    hintedThisQ = true;
+    btns[idx].classList.add("state-hinted");
+    btns[idx].disabled = true;
+    const hintBox = document.getElementById("hint-box");
+    hintBox.innerHTML = `<div class="hint-label">💡 Hint</div>${q.sentences[idx].hint}`;
+    hintBox.classList.add("show");
+    const showWrap = document.getElementById("show-why-wrap");
+    showWrap.classList.add("show");
+    document.getElementById("show-why-btn").onclick = () => revealOdd(q, idx, container);
+  }
+}
+
+function revealOdd(q, clickedIdx, container) {
+  const btns = container.querySelectorAll(".sentence-btn");
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (q.sentences[i].correct) b.classList.add("state-reveal-correct");
+    else if (i === clickedIdx) b.classList.add("state-reveal-wrong");
+  });
+  document.getElementById("show-why-wrap").classList.remove("show");
+  showFeedback(false, q.explanation);
+  userAnswers.push({correct:false, firstTry:false, label: q.sentences[clickedIdx].text.substring(0,65)});
+  document.getElementById("next-wrap").classList.add("show");
+}
+
+function showFeedback(isCorrect, explanation) {
+  const box = document.getElementById("feedback-box");
+  document.getElementById("hint-box").classList.remove("show");
+  document.getElementById("show-why-wrap").classList.remove("show");
+  box.className = `feedback show ${isCorrect ? "fb-correct" : "fb-wrong"}`;
+  box.innerHTML = (isCorrect ? "<strong>✓ Correct!</strong> " : "<strong>Here's why:</strong> ") + explanation;
+}
+
+function nextQuestion() {
+  current++;
+  renderQuestion();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function showResults() {
+  document.getElementById("quiz-area").style.display = "none";
+  document.querySelector(".progress-wrap").style.display = "none";
+  const screen = document.getElementById("results-screen");
+  screen.classList.add("show");
+  const pct = score / questions.length;
+  const circumference = 345.4;
+  setTimeout(() => {
+    document.getElementById("ring-fill").style.strokeDashoffset = circumference - pct * circumference;
+  }, 100);
+  document.getElementById("score-display").textContent = `${score}/${questions.length}`;
+  let title, sub;
+  if (pct === 1)        { title = "Perfect score! 🎉"; sub = "Exceptional — you handled every challenge!"; }
+  else if (pct >= 0.88) { title = "Excellent work! ✨"; sub = "Very strong analytical reading skills."; }
+  else if (pct >= 0.72) { title = "Well done! 👍"; sub = "Good effort — review the trickier questions carefully."; }
+  else if (pct >= 0.56) { title = "Good effort! 📝"; sub = "This set is harder — try again and trust your instincts."; }
+  else                  { title = "Keep going! 📚"; sub = "The challenge level is high — every attempt builds your skills."; }
+  document.getElementById("results-title").textContent = title;
+  document.getElementById("results-sub").textContent = sub;
+
+  const reviewList = document.getElementById("review-list");
+  const typeLabels = { mc: q => q.typeLabel, odd: q => q.typeLabel };
+  questions.forEach((q, i) => {
+    const ua = userAnswers[i];
+    const div = document.createElement("div");
+    div.className = "review-item";
+    const icon = !ua ? "⬜" : (ua.correct && ua.firstTry ? "✅" : ua.correct ? "✅" : "❌");
+    const triesNote = ua && ua.correct && !ua.firstTry ? " (needed a hint)" : ua && !ua.correct ? " (shown answer)" : "";
+    div.innerHTML = `
+      <span class="review-icon">${icon}</span>
+      <div>
+        <div class="review-q">Q${i+1} · ${q.typeLabel}</div>
+        <div class="review-ans">${ua ? ua.label + "…" : "Not answered"}</div>
+        ${triesNote ? `<div class="review-tries">${triesNote}</div>` : ""}
+      </div>`;
+    reviewList.appendChild(div);
+  });
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function restart() {
+  current = 0; score = 0; userAnswers = [];
+  document.getElementById("results-screen").classList.remove("show");
+  document.getElementById("quiz-area").style.display = "";
+  document.querySelector(".progress-wrap").style.display = "";
+  renderQuestion();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
